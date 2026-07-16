@@ -8,6 +8,13 @@
       "when": 1784185935205,
       "tag": "0000_opposite_toxin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784190776463,
+      "tag": "0001_fat_stature",
+      "breakpoints": true
     }
   ]
 }

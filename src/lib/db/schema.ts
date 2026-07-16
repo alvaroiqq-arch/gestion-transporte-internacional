@@ -171,7 +171,7 @@ export const tipos_tramite = pgTable('tipos_tramite', {
 
 export const tramites = pgTable('tramites', {
   id: uuid('id').primaryKey().defaultRandom(),
-  numero: integer('numero').notNull().unique(), // correlativo interno
+  numero: integer('numero').generatedByDefaultAsIdentity().notNull().unique(), // correlativo autogenerado
 
   tipo_tramite_id: uuid('tipo_tramite_id').notNull().references(() => tipos_tramite.id),
   pais: paisEnum('pais').notNull(), // copiado del tipo de trámite al crear — inmutable; define la "caja" para reportes
