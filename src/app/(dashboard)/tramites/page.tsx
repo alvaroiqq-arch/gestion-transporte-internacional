@@ -3,6 +3,7 @@ import { desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { tramites, empresas_cliente, tipos_tramite } from '@/lib/db/schema'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -11,13 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
-const etiquetaEstado: Record<string, string> = {
-  en_curso: 'En curso',
-  pendiente_observado: 'Pendiente / observado',
-  concluido: 'Concluido',
-  anulado: 'Anulado',
-}
+import { PageHeader } from '@/components/layout/page-header'
+import { EstadoTramiteBadge, PaisBadge } from '@/components/estados/estado-badges'
 
 export default async function PaginaTramites() {
   const filas = await db
@@ -38,53 +34,60 @@ export default async function PaginaTramites() {
     .orderBy(desc(tramites.numero))
 
   return (
-    <div style={{ padding: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1>Trámites</h1>
+    <div>
+      <PageHeader titulo="Trámites" descripcion="Gestiones ante la autoridad de Chile y Bolivia">
         <Button asChild>
           <Link href="/tramites/nuevo">Nuevo trámite</Link>
         </Button>
-      </div>
+      </PageHeader>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>N°</TableHead>
-            <TableHead>Empresa</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>País</TableHead>
-            <TableHead>Monto</TableHead>
-            <TableHead>Fecha solicitud</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filas.map((t) => (
-            <TableRow key={t.id}>
-              <TableCell>{t.numero}</TableCell>
-              <TableCell>{t.empresa_razon_social}</TableCell>
-              <TableCell>{t.tipo_nombre}</TableCell>
-              <TableCell>{t.pais}</TableCell>
-              <TableCell>{t.monto_total} {t.moneda}</TableCell>
-              <TableCell>{t.fecha_solicitud}</TableCell>
-              <TableCell>{etiquetaEstado[t.estado]}</TableCell>
-              <TableCell style={{ textAlign: 'right' }}>
-                <Button variant="secondary" asChild>
-                  <Link href={`/tramites/${t.id}`}>Ver</Link>
-                </Button>
-              </TableCell>
+      <Card className="overflow-hidden py-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40">
+              <TableHead>N°</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>País</TableHead>
+              <TableHead>Monto</TableHead>
+              <TableHead>Fecha solicitud</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead />
             </TableRow>
-          ))}
-          {filas.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted, #888)' }}>
-                Aún no hay trámites registrados.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filas.map((t) => (
+              <TableRow key={t.id}>
+                <TableCell className="font-medium tabular-nums">{t.numero}</TableCell>
+                <TableCell>{t.empresa_razon_social}</TableCell>
+                <TableCell>{t.tipo_nombre}</TableCell>
+                <TableCell>
+                  <PaisBadge pais={t.pais} />
+                </TableCell>
+                <TableCell className="tabular-nums">{t.monto_total} {t.moneda}</TableCell>
+                <TableCell className="tabular-nums">{t.fecha_solicitud}</TableCell>
+                <TableCell>
+                  <EstadoTramiteBadge estado={t.estado} />
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-end">
+                    <Button variant="secondary" size="sm" asChild>
+                      <Link href={`/tramites/${t.id}`}>Ver</Link>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {filas.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                  Aún no hay trámites registrados.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   )
 }

@@ -45,7 +45,7 @@ export function FormularioVehiculo({
   const errores = estado.errores ?? {}
 
   return (
-    <form action={ejecutarAccion} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
+    <form action={ejecutarAccion} className="flex flex-col gap-4">
       <div>
         <Label htmlFor="empresa_id">Empresa cliente</Label>
         <Select name="empresa_id" defaultValue={valoresIniciales?.empresa_id}>
@@ -60,13 +60,13 @@ export function FormularioVehiculo({
             ))}
           </SelectContent>
         </Select>
-        {errores.empresa_id && <p style={{ color: 'red', fontSize: 13 }}>{errores.empresa_id[0]}</p>}
+        {errores.empresa_id && <p className="mt-1 text-sm text-destructive">{errores.empresa_id[0]}</p>}
       </div>
 
       <div>
         <Label htmlFor="patente">Patente</Label>
         <Input id="patente" name="patente" defaultValue={valoresIniciales?.patente} required />
-        {errores.patente && <p style={{ color: 'red', fontSize: 13 }}>{errores.patente[0]}</p>}
+        {errores.patente && <p className="mt-1 text-sm text-destructive">{errores.patente[0]}</p>}
       </div>
 
       <div>
@@ -108,7 +108,7 @@ export function FormularioVehiculo({
       <div>
         <Label htmlFor="anio">Año</Label>
         <Input id="anio" name="anio" type="number" defaultValue={valoresIniciales?.anio ?? ''} />
-        {errores.anio && <p style={{ color: 'red', fontSize: 13 }}>{errores.anio[0]}</p>}
+        {errores.anio && <p className="mt-1 text-sm text-destructive">{errores.anio[0]}</p>}
       </div>
 
       <div>
@@ -136,7 +136,7 @@ export function FormularioVehiculo({
         <Input id="notas" name="notas" defaultValue={valoresIniciales?.notas ?? ''} />
       </div>
 
-      {estado.error && <p style={{ color: 'red' }}>{estado.error}</p>}
+      {estado.error && <p className="text-sm text-destructive">{estado.error}</p>}
 
       <Button type="submit" disabled={pendiente}>
         {pendiente ? 'Guardando...' : textoBoton}

@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { tipos_tramite } from '@/lib/db/schema'
 import { FormularioTipoTramite } from '@/components/tipos-tramite/formulario-tipo-tramite'
+import { FormShell } from '@/components/layout/form-shell'
 import { actualizarTipoTramite } from '@/actions/tipos-tramite'
 
 export default async function PaginaEditarTipoTramite({ params }: { params: Promise<{ id: string }> }) {
@@ -13,8 +14,7 @@ export default async function PaginaEditarTipoTramite({ params }: { params: Prom
   if (!tipo) notFound()
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>Editar tipo de trámite</h1>
+    <FormShell titulo="Editar tipo de trámite" volverHref="/tipos-tramite" volverTexto="Volver a tipos de trámite">
       <FormularioTipoTramite
         accion={actualizarTipoTramite.bind(null, tipo.id)}
         textoBoton="Guardar cambios"
@@ -28,6 +28,6 @@ export default async function PaginaEditarTipoTramite({ params }: { params: Prom
           requiere_vehiculo: tipo.requiere_vehiculo,
         }}
       />
-    </div>
+    </FormShell>
   )
 }

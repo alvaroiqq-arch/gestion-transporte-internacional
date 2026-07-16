@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { empresas_cliente } from '@/lib/db/schema'
 import { formatearRut } from '@/lib/validaciones/rut'
 import { FormularioEmpresa } from '@/components/empresas/formulario-empresa'
+import { FormShell } from '@/components/layout/form-shell'
 import { actualizarEmpresa } from '@/actions/empresas'
 
 export default async function PaginaEditarEmpresa({ params }: { params: Promise<{ id: string }> }) {
@@ -16,8 +17,7 @@ export default async function PaginaEditarEmpresa({ params }: { params: Promise<
   if (!empresa) notFound()
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>Editar empresa cliente</h1>
+    <FormShell titulo="Editar empresa cliente" volverHref="/empresas" volverTexto="Volver a empresas">
       <FormularioEmpresa
         accion={actualizarEmpresa.bind(null, empresa.id)}
         textoBoton="Guardar cambios"
@@ -35,6 +35,6 @@ export default async function PaginaEditarEmpresa({ params }: { params: Promise<
           email: empresa.email,
         }}
       />
-    </div>
+    </FormShell>
   )
 }

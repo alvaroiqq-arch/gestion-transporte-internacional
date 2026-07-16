@@ -39,11 +39,11 @@ export function FormularioEmpresa({
   const errores = estado.errores ?? {}
 
   return (
-    <form action={ejecutarAccion} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
+    <form action={ejecutarAccion} className="flex flex-col gap-4">
       <div>
         <Label htmlFor="razon_social">Razón social</Label>
         <Input id="razon_social" name="razon_social" defaultValue={valoresIniciales?.razon_social} required />
-        {errores.razon_social && <p style={{ color: 'red', fontSize: 13 }}>{errores.razon_social[0]}</p>}
+        {errores.razon_social && <p className="mt-1 text-sm text-destructive">{errores.razon_social[0]}</p>}
       </div>
 
       <div>
@@ -69,7 +69,7 @@ export function FormularioEmpresa({
           required
         />
         {errores.identificador_fiscal && (
-          <p style={{ color: 'red', fontSize: 13 }}>{errores.identificador_fiscal[0]}</p>
+          <p className="mt-1 text-sm text-destructive">{errores.identificador_fiscal[0]}</p>
         )}
       </div>
 
@@ -96,10 +96,10 @@ export function FormularioEmpresa({
       <div>
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" defaultValue={valoresIniciales?.email ?? ''} />
-        {errores.email && <p style={{ color: 'red', fontSize: 13 }}>{errores.email[0]}</p>}
+        {errores.email && <p className="mt-1 text-sm text-destructive">{errores.email[0]}</p>}
       </div>
 
-      {estado.error && <p style={{ color: 'red' }}>{estado.error}</p>}
+      {estado.error && <p className="text-sm text-destructive">{estado.error}</p>}
 
       <Button type="submit" disabled={pendiente}>
         {pendiente ? 'Guardando...' : textoBoton}

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { empresas_cliente } from '@/lib/db/schema'
 import { FormularioVehiculo } from '@/components/vehiculos/formulario-vehiculo'
+import { FormShell } from '@/components/layout/form-shell'
 import { crearVehiculo } from '@/actions/vehiculos'
 
 export default async function PaginaNuevoVehiculo() {
@@ -9,9 +10,8 @@ export default async function PaginaNuevoVehiculo() {
     .from(empresas_cliente)
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>Nuevo vehículo</h1>
+    <FormShell titulo="Nuevo vehículo" volverHref="/vehiculos" volverTexto="Volver a vehículos">
       <FormularioVehiculo accion={crearVehiculo} empresas={empresas} textoBoton="Crear vehículo" />
-    </div>
+    </FormShell>
   )
 }

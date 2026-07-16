@@ -33,7 +33,7 @@ export function FormularioSeguimiento({
   const errores = estado.errores ?? {}
 
   return (
-    <form action={ejecutarAccion} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420 }}>
+    <form action={ejecutarAccion} className="flex flex-col gap-3">
       <div>
         <Label htmlFor="referencia_doc_inicial">Referencia documento inicial (FAX/REX)</Label>
         <Input
@@ -52,7 +52,7 @@ export function FormularioSeguimiento({
           type="date"
           defaultValue={valoresIniciales.fecha_plazo ?? ''}
         />
-        {errores.fecha_plazo && <p style={{ color: 'red', fontSize: 13 }}>{errores.fecha_plazo[0]}</p>}
+        {errores.fecha_plazo && <p className="mt-1 text-sm text-destructive">{errores.fecha_plazo[0]}</p>}
       </div>
 
       <div>
@@ -63,7 +63,7 @@ export function FormularioSeguimiento({
           type="date"
           defaultValue={valoresIniciales.fecha_aprobacion ?? ''}
         />
-        {errores.fecha_aprobacion && <p style={{ color: 'red', fontSize: 13 }}>{errores.fecha_aprobacion[0]}</p>}
+        {errores.fecha_aprobacion && <p className="mt-1 text-sm text-destructive">{errores.fecha_aprobacion[0]}</p>}
       </div>
 
       <div>
@@ -95,16 +95,16 @@ export function FormularioSeguimiento({
           defaultValue={valoresIniciales.fecha_vigencia_hasta ?? ''}
         />
         {tieneVigenciaAutomatica && (
-          <p style={{ fontSize: 13, color: 'var(--text-muted, #888)' }}>
+          <p className="text-sm text-muted-foreground">
             Si la dejas vacía, se calcula sola a partir de la vigencia del tipo de trámite.
           </p>
         )}
         {errores.fecha_vigencia_hasta && (
-          <p style={{ color: 'red', fontSize: 13 }}>{errores.fecha_vigencia_hasta[0]}</p>
+          <p className="mt-1 text-sm text-destructive">{errores.fecha_vigencia_hasta[0]}</p>
         )}
       </div>
 
-      {estado.error && <p style={{ color: 'red' }}>{estado.error}</p>}
+      {estado.error && <p className="text-sm text-destructive">{estado.error}</p>}
 
       <Button type="submit" disabled={pendiente}>
         {pendiente ? 'Guardando...' : 'Guardar datos de seguimiento'}

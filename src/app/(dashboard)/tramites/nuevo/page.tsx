@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { empresas_cliente, tipos_tramite, vehiculos } from '@/lib/db/schema'
 import { FormularioTramite } from '@/components/tramites/formulario-tramite'
+import { FormShell } from '@/components/layout/form-shell'
 
 export default async function PaginaNuevoTramite() {
   const [empresas, tipos, listaVehiculos] = await Promise.all([
@@ -27,9 +28,8 @@ export default async function PaginaNuevoTramite() {
   ])
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>Nuevo trámite</h1>
+    <FormShell titulo="Nuevo trámite" volverHref="/tramites" volverTexto="Volver a trámites">
       <FormularioTramite empresas={empresas} tipos={tipos} vehiculos={listaVehiculos} />
-    </div>
+    </FormShell>
   )
 }

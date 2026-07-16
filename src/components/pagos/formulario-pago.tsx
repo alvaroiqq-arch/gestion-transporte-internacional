@@ -35,12 +35,12 @@ export function FormularioPago({ accion, usuarios }: { accion: Accion; usuarios:
   }, [estado, pendiente])
 
   return (
-    <form ref={formRef} action={ejecutarAccion} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420 }}>
+    <form ref={formRef} action={ejecutarAccion} className="flex flex-col gap-3">
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 8 }}>
         <div>
           <Label htmlFor="monto">Monto</Label>
           <Input id="monto" name="monto" inputMode="decimal" placeholder="0" required />
-          {errores.monto && <p style={{ color: 'red', fontSize: 13 }}>{errores.monto[0]}</p>}
+          {errores.monto && <p className="mt-1 text-sm text-destructive">{errores.monto[0]}</p>}
         </div>
         <div>
           <Label htmlFor="moneda">Moneda</Label>
@@ -85,14 +85,14 @@ export function FormularioPago({ accion, usuarios }: { accion: Accion; usuarios:
           </SelectContent>
         </Select>
         {errores.responsable_cobro_id && (
-          <p style={{ color: 'red', fontSize: 13 }}>{errores.responsable_cobro_id[0]}</p>
+          <p className="mt-1 text-sm text-destructive">{errores.responsable_cobro_id[0]}</p>
         )}
       </div>
 
       <div>
         <Label htmlFor="fecha_pago">Fecha de pago</Label>
         <Input id="fecha_pago" name="fecha_pago" type="date" defaultValue={hoy()} required />
-        {errores.fecha_pago && <p style={{ color: 'red', fontSize: 13 }}>{errores.fecha_pago[0]}</p>}
+        {errores.fecha_pago && <p className="mt-1 text-sm text-destructive">{errores.fecha_pago[0]}</p>}
       </div>
 
       <div>
@@ -105,7 +105,7 @@ export function FormularioPago({ accion, usuarios }: { accion: Accion; usuarios:
         <Input id="notas" name="notas" />
       </div>
 
-      {estado.error && <p style={{ color: 'red' }}>{estado.error}</p>}
+      {estado.error && <p className="text-sm text-destructive">{estado.error}</p>}
 
       <Button type="submit" disabled={pendiente}>
         {pendiente ? 'Registrando...' : 'Registrar pago'}

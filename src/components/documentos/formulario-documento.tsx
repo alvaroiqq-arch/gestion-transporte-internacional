@@ -29,7 +29,7 @@ export function FormularioDocumento({ accion }: { accion: Accion }) {
   }, [estado, pendiente])
 
   return (
-    <form ref={formRef} action={ejecutarAccion} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420 }}>
+    <form ref={formRef} action={ejecutarAccion} className="flex flex-col gap-3">
       <div>
         <Label htmlFor="tipo_documento">Tipo de documento</Label>
         <Input id="tipo_documento" name="tipo_documento" list="sugerencias-tipo-documento" required />
@@ -38,19 +38,19 @@ export function FormularioDocumento({ accion }: { accion: Accion }) {
             <option key={s} value={s} />
           ))}
         </datalist>
-        {errores.tipo_documento && <p style={{ color: 'red', fontSize: 13 }}>{errores.tipo_documento[0]}</p>}
+        {errores.tipo_documento && <p className="mt-1 text-sm text-destructive">{errores.tipo_documento[0]}</p>}
       </div>
 
       <div>
         <Label htmlFor="fecha_emision">Fecha de emisión</Label>
         <Input id="fecha_emision" name="fecha_emision" type="date" defaultValue={hoy()} required />
-        {errores.fecha_emision && <p style={{ color: 'red', fontSize: 13 }}>{errores.fecha_emision[0]}</p>}
+        {errores.fecha_emision && <p className="mt-1 text-sm text-destructive">{errores.fecha_emision[0]}</p>}
       </div>
 
       <div>
         <Label htmlFor="archivo">Archivo</Label>
         <Input id="archivo" name="archivo" type="file" required />
-        {errores.archivo && <p style={{ color: 'red', fontSize: 13 }}>{errores.archivo[0]}</p>}
+        {errores.archivo && <p className="mt-1 text-sm text-destructive">{errores.archivo[0]}</p>}
       </div>
 
       <div>
@@ -58,7 +58,7 @@ export function FormularioDocumento({ accion }: { accion: Accion }) {
         <Input id="notas" name="notas" />
       </div>
 
-      {estado.error && <p style={{ color: 'red' }}>{estado.error}</p>}
+      {estado.error && <p className="text-sm text-destructive">{estado.error}</p>}
 
       <Button type="submit" disabled={pendiente}>
         {pendiente ? 'Subiendo...' : 'Agregar documento'}

@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf5ee;
+  --foreground: #3a2e22;
+
+  --card: #fffdf9;
+  --card-foreground: #3a2e22;
+
+  --popover: #fffbf4;
+  --popover-foreground: #3a2e22;
+
+  --primary: #c1683c;
+  --primary-foreground: #fff8f0;
+
+  --secondary: #efe1cf;
+  --secondary-foreground: #4a3b2a;
+
+  --muted: #f1e7d8;
+  --muted-foreground: #8c7a64;
+
+  --accent: #e8c9a0;
+  --accent-foreground: #3a2e22;
+
+  --destructive: #b54b3a;
+
+  --border: #e6d7c3;
+  --input: #c9ab84;
+  --ring: #c1683c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1f1a15;
+    --foreground: #ede1d3;
+
+    --card: #2a2219;
+    --card-foreground: #ede1d3;
+
+    --popover: #2a2219;
+    --popover-foreground: #ede1d3;
+
+    --primary: #d98a5e;
+    --primary-foreground: #241a12;
+
+    --secondary: #362b21;
+    --secondary-foreground: #ede1d3;
+
+    --muted: #362b21;
+    --muted-foreground: #b3a08a;
+
+    --accent: #4a3a2a;
+    --accent-foreground: #ede1d3;
+
+    --destructive: #c96a56;
+
+    --border: #3d3225;
+    --input: #8a715a;
+    --ring: #d98a5e;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }

@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { vehiculos, empresas_cliente } from '@/lib/db/schema'
 import { FormularioVehiculo } from '@/components/vehiculos/formulario-vehiculo'
+import { FormShell } from '@/components/layout/form-shell'
 import { actualizarVehiculo } from '@/actions/vehiculos'
 
 export default async function PaginaEditarVehiculo({ params }: { params: Promise<{ id: string }> }) {
@@ -16,8 +17,7 @@ export default async function PaginaEditarVehiculo({ params }: { params: Promise
   if (!vehiculo) notFound()
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>Editar vehículo</h1>
+    <FormShell titulo="Editar vehículo" volverHref="/vehiculos" volverTexto="Volver a vehículos">
       <FormularioVehiculo
         accion={actualizarVehiculo.bind(null, vehiculo.id)}
         empresas={empresas}
@@ -35,6 +35,6 @@ export default async function PaginaEditarVehiculo({ params }: { params: Promise
           notas: vehiculo.notas,
         }}
       />
-    </div>
+    </FormShell>
   )
 }

@@ -39,7 +39,7 @@ export function FormularioTramite({
   const tipoSeleccionado = tipos.find((t) => t.id === tipoId)
 
   return (
-    <form action={ejecutarAccion} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
+    <form action={ejecutarAccion} className="flex flex-col gap-4">
       <div>
         <Label htmlFor="empresa_id">Empresa cliente</Label>
         <Select name="empresa_id" value={empresaId} onValueChange={setEmpresaId}>
@@ -52,7 +52,7 @@ export function FormularioTramite({
             ))}
           </SelectContent>
         </Select>
-        {errores.empresa_id && <p style={{ color: 'red', fontSize: 13 }}>{errores.empresa_id[0]}</p>}
+        {errores.empresa_id && <p className="mt-1 text-sm text-destructive">{errores.empresa_id[0]}</p>}
       </div>
 
       <div>
@@ -69,13 +69,13 @@ export function FormularioTramite({
             ))}
           </SelectContent>
         </Select>
-        {errores.tipo_tramite_id && <p style={{ color: 'red', fontSize: 13 }}>{errores.tipo_tramite_id[0]}</p>}
+        {errores.tipo_tramite_id && <p className="mt-1 text-sm text-destructive">{errores.tipo_tramite_id[0]}</p>}
       </div>
 
       <div>
         <Label htmlFor="fecha_solicitud">Fecha de solicitud</Label>
         <Input id="fecha_solicitud" name="fecha_solicitud" type="date" required />
-        {errores.fecha_solicitud && <p style={{ color: 'red', fontSize: 13 }}>{errores.fecha_solicitud[0]}</p>}
+        {errores.fecha_solicitud && <p className="mt-1 text-sm text-destructive">{errores.fecha_solicitud[0]}</p>}
       </div>
 
       {empresaId && (
@@ -84,7 +84,7 @@ export function FormularioTramite({
             Vehículos {tipoSeleccionado?.requiere_vehiculo ? '(obligatorio al menos uno)' : '(opcional)'}
           </Label>
           {vehiculosDeLaEmpresa.length === 0 && (
-            <p style={{ fontSize: 13, color: 'var(--text-muted, #888)' }}>
+            <p className="text-sm text-muted-foreground">
               Esta empresa no tiene vehículos registrados.
             </p>
           )}
@@ -94,7 +94,7 @@ export function FormularioTramite({
               <Label htmlFor={`vehiculo-${v.id}`}>{v.patente}</Label>
             </div>
           ))}
-          {errores.vehiculo_ids && <p style={{ color: 'red', fontSize: 13 }}>{errores.vehiculo_ids[0]}</p>}
+          {errores.vehiculo_ids && <p className="mt-1 text-sm text-destructive">{errores.vehiculo_ids[0]}</p>}
         </div>
       )}
 
@@ -103,7 +103,7 @@ export function FormularioTramite({
         <Input id="notas" name="notas" />
       </div>
 
-      {estado.error && <p style={{ color: 'red' }}>{estado.error}</p>}
+      {estado.error && <p className="text-sm text-destructive">{estado.error}</p>}
 
       <Button type="submit" disabled={pendiente}>
         {pendiente ? 'Creando...' : 'Crear trámite'}

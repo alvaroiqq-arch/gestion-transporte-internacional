@@ -41,11 +41,11 @@ export function FormularioTipoTramite({
   const errores = estado.errores ?? {}
 
   return (
-    <form action={ejecutarAccion} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
+    <form action={ejecutarAccion} className="flex flex-col gap-4">
       <div>
         <Label htmlFor="nombre">Nombre del trámite</Label>
         <Input id="nombre" name="nombre" defaultValue={valoresIniciales?.nombre} required />
-        {errores.nombre && <p style={{ color: 'red', fontSize: 13 }}>{errores.nombre[0]}</p>}
+        {errores.nombre && <p className="mt-1 text-sm text-destructive">{errores.nombre[0]}</p>}
       </div>
 
       <div>
@@ -77,7 +77,7 @@ export function FormularioTipoTramite({
             defaultValue={valoresIniciales?.precio}
             required
           />
-          {errores.precio && <p style={{ color: 'red', fontSize: 13 }}>{errores.precio[0]}</p>}
+          {errores.precio && <p className="mt-1 text-sm text-destructive">{errores.precio[0]}</p>}
         </div>
         <div style={{ flex: 1 }}>
           <Label htmlFor="moneda">Moneda</Label>
@@ -103,7 +103,7 @@ export function FormularioTipoTramite({
           defaultValue={valoresIniciales?.vigencia_meses ?? ''}
           placeholder="Deja vacío si no aplica"
         />
-        {errores.vigencia_meses && <p style={{ color: 'red', fontSize: 13 }}>{errores.vigencia_meses[0]}</p>}
+        {errores.vigencia_meses && <p className="mt-1 text-sm text-destructive">{errores.vigencia_meses[0]}</p>}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -116,7 +116,7 @@ export function FormularioTipoTramite({
         <Label htmlFor="requiere_vehiculo">Requiere seleccionar un vehículo</Label>
       </div>
 
-      {estado.error && <p style={{ color: 'red' }}>{estado.error}</p>}
+      {estado.error && <p className="text-sm text-destructive">{estado.error}</p>}
 
       <Button type="submit" disabled={pendiente}>
         {pendiente ? 'Guardando...' : textoBoton}
