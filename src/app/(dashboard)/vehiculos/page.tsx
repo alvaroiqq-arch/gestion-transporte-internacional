@@ -3,6 +3,7 @@ import { desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { vehiculos, empresas_cliente } from '@/lib/db/schema'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -11,12 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageHeader } from '@/components/layout/page-header'
+import { EstadoVehiculoBadge, PaisBadge } from '@/components/estados/estado-badges'
 import { cambiarEstadoVehiculo } from '@/actions/vehiculos'
 
-const etiquetaEstado: Record<string, string> = {
-  habilitado: 'Habilitado',
-  inhabilitado: 'Inhabilitado',
-  suspendido: 'Suspendido',
+const etiquetaTipo: Record<string, string> = {
+  carga: 'Carga',
+  pasajeros: 'Pasajeros',
 }
 
 export default async function PaginaVehiculos() {
@@ -34,58 +36,68 @@ export default async function PaginaVehiculos() {
     .orderBy(desc(vehiculos.created_at))
 
   return (
-    <div style={{ padding: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1>Vehículos</h1>
+    <div>
+      <PageHeader titulo="Vehículos" descripcion="Parque automotor habilitado por empresa">
+        <Button variant="secondary" asChild>
+          <Link href="/vehiculos/importar">Importar desde PDF</Link>
+        </Button>
         <Button asChild>
           <Link href="/vehiculos/nueva">Nuevo vehículo</Link>
         </Button>
-      </div>
+      </PageHeader>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Patente</TableHead>
-            <TableHead>Empresa</TableHead>
-            <TableHead>País</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filas.map((v) => (
-            <TableRow key={v.id}>
-              <TableCell>{v.patente}</TableCell>
-              <TableCell>{v.empresa_razon_social}</TableCell>
-              <TableCell>{v.pais_matricula}</TableCell>
-              <TableCell>{v.tipo_vehiculo}</TableCell>
-              <TableCell>{etiquetaEstado[v.estado]}</TableCell>
-              <TableCell style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <Button variant="secondary" asChild>
-                  <Link href={`/vehiculos/${v.id}`}>Editar</Link>
-                </Button>
-                {v.estado === 'habilitado' ? (
-                  <form action={cambiarEstadoVehiculo.bind(null, v.id, 'inhabilitado')}>
-                    <Button variant="secondary" type="submit">Inhabilitar</Button>
-                  </form>
-                ) : (
-                  <form action={cambiarEstadoVehiculo.bind(null, v.id, 'habilitado')}>
-                    <Button variant="secondary" type="submit">Habilitar</Button>
-                  </form>
-                )}
-              </TableCell>
+      <Card className="overflow-hidden py-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40">
+              <TableHead>Patente</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead>País</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead />
             </TableRow>
-          ))}
-          {filas.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted, #888)' }}>
-                Aún no hay vehículos registrados.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filas.map((v) => (
+              <TableRow key={v.id}>
+                <TableCell className="font-medium tabular-nums">{v.patente}</TableCell>
+                <TableCell>{v.empresa_razon_social}</TableCell>
+                <TableCell>
+                  <PaisBadge pais={v.pais_matricula} />
+                </TableCell>
+                <TableCell>{etiquetaTipo[v.tipo_vehiculo] ?? v.tipo_vehiculo}</TableCell>
+                <TableCell>
+                  <EstadoVehiculoBadge estado={v.estado} />
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="secondary" size="sm" asChild>
+                      <Link href={`/vehiculos/${v.id}`}>Editar</Link>
+                    </Button>
+                    {v.estado === 'habilitado' ? (
+                      <form action={cambiarEstadoVehiculo.bind(null, v.id, 'inhabilitado')}>
+                        <Button variant="secondary" size="sm" type="submit">Inhabilitar</Button>
+                      </form>
+                    ) : (
+                      <form action={cambiarEstadoVehiculo.bind(null, v.id, 'habilitado')}>
+                        <Button variant="secondary" size="sm" type="submit">Habilitar</Button>
+                      </form>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {filas.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                  Aún no hay vehículos registrados.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   )
 }
