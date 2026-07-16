@@ -12,7 +12,7 @@ const esquemaVehiculo = z.object({
   empresa_id: z.string().uuid('Selecciona una empresa'),
   patente: z.string().trim().refine(validarPatente, 'La patente es muy corta'),
   pais_matricula: z.enum(['chile', 'bolivia']),
-  tipo_vehiculo: z.enum(['carga', 'pasajeros']),
+  tipo_vehiculo: z.string().trim().min(1, 'Indicá la clase del vehículo').transform((s) => s.toUpperCase()),
   marca: z.string().trim().optional(),
   modelo: z.string().trim().optional(),
   anio: z.union([z.literal(''), z.coerce.number().int().min(1950).max(2100)]).optional(),

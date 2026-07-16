@@ -16,9 +16,7 @@ const MAX_ARCHIVOS = 100
 export type FilaImportacion = {
   archivo: string
   patente: string | null
-  tipoDetectado: string | null
-  tipoVehiculo: 'carga' | 'pasajeros'
-  tipoIncierto: boolean
+  clase: string | null // clase del certificado (ej. CAMION, REMOLQUE)
   marca: string | null
   modelo: string | null
   anio: number | null
@@ -66,9 +64,7 @@ export async function analizarPdfsVehiculos(
       filas.push({
         archivo: archivo.name,
         patente: v.patente,
-        tipoDetectado: v.tipoDetectado,
-        tipoVehiculo: v.tipoVehiculo,
-        tipoIncierto: v.tipoIncierto,
+        clase: v.clase,
         marca: v.marca,
         modelo: v.modelo,
         anio: v.anio,
@@ -84,9 +80,7 @@ export async function analizarPdfsVehiculos(
       filas.push({
         archivo: archivo.name,
         patente: null,
-        tipoDetectado: null,
-        tipoVehiculo: 'carga',
-        tipoIncierto: true,
+        clase: null,
         marca: null,
         modelo: null,
         anio: null,
@@ -143,7 +137,7 @@ export async function analizarPdfsVehiculos(
 const esquemaFila = z.object({
   patente: z.string().trim().min(4, 'Patente inválida'),
   empresaId: z.string().uuid('Cada vehículo debe quedar vinculado a una empresa'),
-  tipoVehiculo: z.enum(['carga', 'pasajeros']),
+  clase: z.string().trim().min(1, 'Indicá la clase del vehículo'),
   marca: z.string().trim().optional().nullable(),
   modelo: z.string().trim().optional().nullable(),
   anio: z.number().int().min(1950).max(2100).nullable(),
@@ -159,7 +153,7 @@ export async function importarVehiculos(input: {
   filas: Array<{
     patente: string
     empresaId: string
-    tipoVehiculo: 'carga' | 'pasajeros'
+    clase: string
     marca: string | null
     modelo: string | null
     anio: number | null
@@ -215,7 +209,7 @@ export async function importarVehiculos(input: {
         empresa_id: f.empresaId,
         patente: f.patente,
         pais_matricula: 'chile' as const,
-        tipo_vehiculo: f.tipoVehiculo,
+        tipo_vehiculo: f.clase,
         marca: f.marca || null,
         modelo: f.modelo || null,
         anio: f.anio ?? null,

@@ -22,6 +22,13 @@
       "when": 1784192833182,
       "tag": "0002_fluffy_blockbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784240384061,
+      "tag": "0003_amazing_doctor_spectrum",
+      "breakpoints": true
     }
   ]
 }

@@ -49,16 +49,16 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
         setError(res.error)
         return
       }
-      setFilas(res.filas.map((f) => ({ ...f, incluir: !f.error && !f.yaExiste && !!f.empresaId })))
+      setFilas(res.filas.map((f) => ({ ...f, incluir: !f.error && !f.yaExiste && !!f.empresaId && !!f.clase })))
       setFase('previsualizacion')
     })
   }
 
   function cargar() {
     setError(null)
-    const seleccionadas = filas.filter((f) => f.incluir && !f.error && f.patente && f.empresaId)
+    const seleccionadas = filas.filter((f) => f.incluir && !f.error && f.patente && f.empresaId && f.clase)
     if (seleccionadas.length === 0) {
-      setError('No hay vehículos seleccionados (revisá que cada uno tenga empresa vinculada).')
+      setError('No hay vehículos seleccionados (revisá que cada uno tenga empresa y clase).')
       return
     }
     startTransition(async () => {
@@ -66,7 +66,7 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
         filas: seleccionadas.map((f) => ({
           patente: f.patente!,
           empresaId: f.empresaId!,
-          tipoVehiculo: f.tipoVehiculo,
+          clase: f.clase!,
           marca: f.marca,
           modelo: f.modelo,
           anio: f.anio,
@@ -82,7 +82,7 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
     })
   }
 
-  const seleccionadas = filas.filter((f) => f.incluir && !f.error && f.patente && f.empresaId).length
+  const seleccionadas = filas.filter((f) => f.incluir && !f.error && f.patente && f.empresaId && f.clase).length
 
   // ── Fase 3: resultado ──────────────────────────────────────────────
   if (fase === 'listo' && resultado) {
@@ -141,6 +141,12 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
           </div>
         )}
 
+        <datalist id="clases-vehiculo">
+          {['CAMION', 'CAMIONETA', 'TRACTOCAMION', 'REMOLQUE', 'SEMIREMOLQUE', 'FURGON', 'BUS', 'MINIBUS', 'TAXIBUS', 'AUTOMOVIL', 'STATION WAGON'].map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+
         <div className="overflow-x-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
@@ -162,7 +168,7 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
                     <input
                       type="checkbox"
                       checked={f.incluir}
-                      disabled={!!f.error || !f.patente || !f.empresaId}
+                      disabled={!!f.error || !f.patente || !f.empresaId || !f.clase}
                       onChange={(e) => actualizarFila(i, { incluir: e.target.checked })}
                       aria-label={`Incluir ${f.patente ?? f.archivo}`}
                     />
@@ -181,7 +187,7 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
                         actualizarFila(i, {
                           empresaId: v,
                           empresaNombre: empresas.find((e) => e.id === v)?.razon_social ?? null,
-                          incluir: !f.error && !!f.patente,
+                          incluir: !f.error && !!f.patente && !!f.clase,
                         })
                       }
                     >
@@ -201,18 +207,12 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      value={f.tipoVehiculo}
-                      onValueChange={(v) => actualizarFila(i, { tipoVehiculo: v as 'carga' | 'pasajeros', tipoIncierto: false })}
-                    >
-                      <SelectTrigger className={'h-8 w-32 ' + (f.tipoIncierto ? 'border-[#7a5a1c]' : '')}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="carga">Carga</SelectItem>
-                        <SelectItem value="pasajeros">Pasajeros</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      value={f.clase ?? ''}
+                      list="clases-vehiculo"
+                      onChange={(e) => actualizarFila(i, { clase: e.target.value.toUpperCase() })}
+                      className={'h-8 w-40 ' + (f.clase ? '' : 'border-[#8a3626]')}
+                    />
                   </TableCell>
                   <TableCell>
                     <Input
@@ -246,8 +246,8 @@ export function ImportadorVehiculos({ empresas }: { empresas: Empresa[] }) {
                       <Badge tono="advertencia">Ya existe</Badge>
                     ) : !f.empresaId ? (
                       <Badge tono="peligro">Sin empresa</Badge>
-                    ) : f.tipoIncierto ? (
-                      <Badge tono="advertencia">Revisar tipo</Badge>
+                    ) : !f.clase ? (
+                      <Badge tono="advertencia">Sin clase</Badge>
                     ) : (
                       <Badge tono="exito">Listo</Badge>
                     )}

@@ -26,8 +26,6 @@ export const paisEnum = pgEnum('pais', ['chile', 'bolivia'])
 // Moneda de un pago — libre, no atada al país del trámite (ver CLAUDE.md)
 export const monedaEnum = pgEnum('moneda', ['CLP', 'BOB', 'USD'])
 
-export const tipoVehiculoEnum = pgEnum('tipo_vehiculo', ['carga', 'pasajeros'])
-
 export const estadoVehiculoEnum = pgEnum('estado_vehiculo', [
   'habilitado',
   'inhabilitado',
@@ -120,7 +118,8 @@ export const vehiculos = pgTable('vehiculos', {
 
   patente: text('patente').notNull(),
   pais_matricula: paisEnum('pais_matricula').notNull(),
-  tipo_vehiculo: tipoVehiculoEnum('tipo_vehiculo').notNull(),
+  // Clase del vehículo tal cual el certificado del R.V.M. (ej. CAMION, REMOLQUE, TRACTOCAMION)
+  tipo_vehiculo: text('tipo_vehiculo').notNull(),
 
   marca: text('marca'),
   modelo: text('modelo'),

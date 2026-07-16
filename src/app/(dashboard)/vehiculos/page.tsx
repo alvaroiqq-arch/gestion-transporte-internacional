@@ -16,11 +16,6 @@ import { PageHeader } from '@/components/layout/page-header'
 import { EstadoVehiculoBadge, PaisBadge } from '@/components/estados/estado-badges'
 import { cambiarEstadoVehiculo } from '@/actions/vehiculos'
 
-const etiquetaTipo: Record<string, string> = {
-  carga: 'Carga',
-  pasajeros: 'Pasajeros',
-}
-
 export default async function PaginaVehiculos() {
   const filas = await db
     .select({
@@ -66,7 +61,7 @@ export default async function PaginaVehiculos() {
                 <TableCell>
                   <PaisBadge pais={v.pais_matricula} />
                 </TableCell>
-                <TableCell>{etiquetaTipo[v.tipo_vehiculo] ?? v.tipo_vehiculo}</TableCell>
+                <TableCell>{v.tipo_vehiculo}</TableCell>
                 <TableCell>
                   <EstadoVehiculoBadge estado={v.estado} />
                 </TableCell>

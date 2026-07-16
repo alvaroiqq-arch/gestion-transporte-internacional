@@ -21,7 +21,7 @@ type ValoresIniciales = {
   empresa_id: string
   patente: string
   pais_matricula: 'chile' | 'bolivia'
-  tipo_vehiculo: 'carga' | 'pasajeros'
+  tipo_vehiculo: string
   marca: string | null
   modelo: string | null
   anio: number | null
@@ -83,16 +83,21 @@ export function FormularioVehiculo({
       </div>
 
       <div>
-        <Label htmlFor="tipo_vehiculo">Tipo de vehículo</Label>
-        <Select name="tipo_vehiculo" defaultValue={valoresIniciales?.tipo_vehiculo ?? 'carga'}>
-          <SelectTrigger id="tipo_vehiculo">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="carga">Carga</SelectItem>
-            <SelectItem value="pasajeros">Pasajeros</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label htmlFor="tipo_vehiculo">Clase de vehículo</Label>
+        <Input
+          id="tipo_vehiculo"
+          name="tipo_vehiculo"
+          list="clases-vehiculo"
+          placeholder="CAMION, REMOLQUE, TRACTOCAMION…"
+          defaultValue={valoresIniciales?.tipo_vehiculo ?? ''}
+          required
+        />
+        <datalist id="clases-vehiculo">
+          {['CAMION', 'CAMIONETA', 'TRACTOCAMION', 'REMOLQUE', 'SEMIREMOLQUE', 'FURGON', 'BUS', 'MINIBUS', 'TAXIBUS', 'AUTOMOVIL', 'STATION WAGON'].map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+        {errores.tipo_vehiculo && <p className="mt-1 text-sm text-destructive">{errores.tipo_vehiculo[0]}</p>}
       </div>
 
       <div>

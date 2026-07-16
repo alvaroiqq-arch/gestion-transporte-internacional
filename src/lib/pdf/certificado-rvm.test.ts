@@ -22,9 +22,7 @@ describe('parsearCertificadoRvm', () => {
   it('extrae los datos de un camión (formato nuevo)', () => {
     const v = parsearCertificadoRvm(CAMION)
     expect(v.patente).toBe('JFZW.52')
-    expect(v.tipoDetectado).toBe('CAMION')
-    expect(v.tipoVehiculo).toBe('carga')
-    expect(v.tipoIncierto).toBe(false)
+    expect(v.clase).toBe('CAMION')
     expect(v.marca).toBe('VOLVO')
     expect(v.modelo).toBe('FH 12')
     expect(v.anio).toBe(2005)
@@ -46,8 +44,7 @@ describe('parsearCertificadoRvm', () => {
   it('extrae un remolque sin número de motor (formato antiguo)', () => {
     const v = parsearCertificadoRvm(REMOLQUE)
     expect(v.patente).toBe('JE.3332')
-    expect(v.tipoDetectado).toBe('REMOLQUE')
-    expect(v.tipoVehiculo).toBe('carga')
+    expect(v.clase).toBe('REMOLQUE')
     expect(v.marca).toBe('PROGRESO')
     expect(v.modelo).toBe('PLANO')
     expect(v.anio).toBe(1991)
@@ -62,23 +59,12 @@ describe('parsearCertificadoRvm', () => {
     expect(v.notas).not.toContain('PBV:')
   })
 
-  it('mapea BUS a pasajeros', () => {
+  it('captura la clase tal cual el certificado (TRACTOCAMION)', () => {
     const texto =
-      'Inscripción : BXYZ.10-3 DATOS DEL VEHICULO Tipo Vehículo : BUS Año : 2018 Marca : MERCEDES Modelo : O500 ' +
-      'Nro. Motor : ABC Nro. Chasis : XYZ Color : ROJO Combustible : DIESEL PBV : 15 DATOS DEL PROPIETARIO'
+      'Inscripción : LBFV.42-1 DATOS DEL VEHICULO Tipo Vehículo : TRACTOCAMION Año : 2003 Marca : VOLVO Modelo : FH 12 ' +
+      'Nro. Motor : ABC Nro. Chasis : XYZ Color : BLANCO Combustible : DIESEL PBV : 21 DATOS DEL PROPIETARIO'
     const v = parsearCertificadoRvm(texto)
-    expect(v.tipoVehiculo).toBe('pasajeros')
-    expect(v.tipoIncierto).toBe(false)
-  })
-
-  it('marca el tipo como incierto y usa "carga" por defecto cuando no reconoce el tipo', () => {
-    const texto =
-      'Inscripción : ABCD.11-2 DATOS DEL VEHICULO Tipo Vehículo : CASA RODANTE Año : 2010 Marca : X Modelo : Y ' +
-      'Nro. Chasis : Z Color : GRIS Combustible : DIESEL PBV : 3 DATOS DEL PROPIETARIO'
-    const v = parsearCertificadoRvm(texto)
-    expect(v.tipoDetectado).toBe('CASA RODANTE')
-    expect(v.tipoVehiculo).toBe('carga')
-    expect(v.tipoIncierto).toBe(true)
+    expect(v.clase).toBe('TRACTOCAMION')
   })
 
   it('devuelve error cuando el documento no trae patente', () => {

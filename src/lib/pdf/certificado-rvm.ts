@@ -3,13 +3,9 @@
 // Recibe el texto plano ya extraído del PDF y devuelve los datos del vehículo.
 // Es una función pura (texto → datos) para poder testearla sin depender del PDF.
 
-export type TipoVehiculo = 'carga' | 'pasajeros'
-
 export type VehiculoExtraido = {
   patente: string | null
-  tipoDetectado: string | null // texto tal cual del certificado (ej. "CAMION")
-  tipoVehiculo: TipoVehiculo // mapeo al enum del sistema (revisar en previsualización)
-  tipoIncierto: boolean // true si el tipo no se pudo mapear con certeza
+  clase: string | null // clase tal cual el certificado (ej. "CAMION", "REMOLQUE", "TRACTOCAMION")
   marca: string | null
   modelo: string | null
   anio: number | null
@@ -18,37 +14,6 @@ export type VehiculoExtraido = {
   propietarioRut: string | null // RUT del propietario (ej. "76.543.615-K"), para vincular a la empresa
   notas: string // respaldo: motor, chasis, color, combustible, PBV
   error: string | null // motivo si no se pudo interpretar (ej. sin patente)
-}
-
-// Mapeo del "Tipo Vehículo" del certificado al enum carga/pasajeros del sistema.
-const MAPA_TIPO: Record<string, TipoVehiculo> = {
-  CAMION: 'carga',
-  CAMIONETA: 'carga',
-  REMOLQUE: 'carga',
-  SEMIREMOLQUE: 'carga',
-  'SEMI REMOLQUE': 'carga',
-  TRACTOCAMION: 'carga',
-  'TRACTO CAMION': 'carga',
-  TRACTOR: 'carga',
-  TRACTO: 'carga',
-  FURGON: 'carga',
-  BUS: 'pasajeros',
-  MINIBUS: 'pasajeros',
-  TAXIBUS: 'pasajeros',
-  OMNIBUS: 'pasajeros',
-  'BUS RURAL': 'pasajeros',
-  AUTOMOVIL: 'pasajeros',
-  'STATION WAGON': 'pasajeros',
-}
-
-// Quita acentos y colapsa espacios para comparar el tipo contra el mapa.
-function normalizarClave(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toUpperCase()
 }
 
 function buscar(texto: string, patron: RegExp): string | null {
@@ -63,13 +28,10 @@ export function parsearCertificadoRvm(textoCrudo: string): VehiculoExtraido {
   const mInscripcion = texto.match(/Inscripci[óo]n\s*:\s*([A-ZÑ]+\.?\d+)\s*-\s*[0-9K]/i)
   const patente = mInscripcion ? mInscripcion[1].toUpperCase() : null
 
-  // Tipo Vehículo + Año van en la misma línea: "Tipo Vehículo : CAMION Año : 2005"
+  // Clase + Año van en la misma línea: "Tipo Vehículo : CAMION Año : 2005"
   const mTipoAnio = texto.match(/Tipo\s+Veh[ií]culo\s*:\s*(.+?)\s+A[ñn]o\s*:\s*(\d{4})/i)
-  const tipoDetectado = mTipoAnio ? mTipoAnio[1].replace(/\s+/g, ' ').trim() : null
+  const clase = mTipoAnio ? mTipoAnio[1].replace(/\s+/g, ' ').trim().toUpperCase() : null
   const anio = mTipoAnio ? Number(mTipoAnio[2]) : null
-
-  const claveTipo = tipoDetectado ? normalizarClave(tipoDetectado) : null
-  const tipoMapeado = claveTipo ? MAPA_TIPO[claveTipo] : undefined
 
   const marca = buscar(texto, /Marca\s*:\s*(.+?)\s+Modelo\s*:/i)
   const modelo = buscar(texto, /Modelo\s*:\s*(.+?)\s+Nro\.\s*(?:Motor|Chasis)\s*:/i)
@@ -105,9 +67,7 @@ export function parsearCertificadoRvm(textoCrudo: string): VehiculoExtraido {
 
   return {
     patente,
-    tipoDetectado,
-    tipoVehiculo: tipoMapeado ?? 'carga',
-    tipoIncierto: tipoMapeado === undefined,
+    clase,
     marca,
     modelo,
     anio,
