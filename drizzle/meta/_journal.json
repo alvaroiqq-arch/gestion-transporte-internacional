@@ -15,6 +15,13 @@
       "when": 1784190776463,
       "tag": "0001_fat_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784192833182,
+      "tag": "0002_fluffy_blockbuster",
+      "breakpoints": true
     }
   ]
 }

@@ -238,6 +238,12 @@ export const pagos = pgTable('pagos', {
   estado: estadoPagoEnum('estado').notNull().default('pendiente'),
   responsable_cobro_id: uuid('responsable_cobro_id').notNull().references(() => usuarios.id),
 
+  // Pagos de trámites de Bolivia requieren validación de un usuario con
+  // pais_gestion = 'bolivia' antes de quedar 'pagado'; los de Chile no la requieren
+  // y quedan 'pagado' de inmediato (ver CLAUDE.md / regla de negocio de validación)
+  validado_por_id: uuid('validado_por_id').references(() => usuarios.id),
+  fecha_validacion: timestamp('fecha_validacion', { withTimezone: true }),
+
   fecha_pago: date('fecha_pago').notNull(),
   comprobante_url: text('comprobante_url'), // Supabase Storage
 
@@ -344,6 +350,10 @@ export const pagosRelations = relations(pagos, ({ one }) => ({
   }),
   responsableCobro: one(usuarios, {
     fields: [pagos.responsable_cobro_id],
+    references: [usuarios.id],
+  }),
+  validadoPor: one(usuarios, {
+    fields: [pagos.validado_por_id],
     references: [usuarios.id],
   }),
 }))
