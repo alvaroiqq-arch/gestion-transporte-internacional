@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { tramites, tramite_vehiculos, tipos_tramite, audit_log } from '@/lib/db/schema'
 import { crearClienteServidor } from '@/lib/supabase/server'
+import { calcularFechaVigenciaHasta } from '@/lib/calculos/vigencia'
 
 const esquemaTramite = z.object({
   empresa_id: z.string().uuid('Selecciona una empresa'),
@@ -114,4 +115,87 @@ export async function cambiarEstadoTramite(id: string, estado: (typeof estadosVa
 
   revalidatePath('/tramites')
   revalidatePath(`/tramites/${id}`)
+}
+
+const esquemaSeguimiento = z
+  .object({
+    referencia_doc_inicial: z.string().trim().optional(),
+    fecha_plazo: z.union([z.literal(''), z.string()]).optional(),
+    referencia_doc_respaldo: z.string().trim().optional(),
+    fecha_aprobacion: z.union([z.literal(''), z.string()]).optional(),
+    fecha_vigencia_desde: z.union([z.literal(''), z.string()]).optional(),
+    fecha_vigencia_hasta: z.union([z.literal(''), z.string()]).optional(),
+  })
+  .superRefine((datos, ctx) => {
+    if (
+      datos.fecha_vigencia_desde &&
+      datos.fecha_vigencia_hasta &&
+      datos.fecha_vigencia_hasta < datos.fecha_vigencia_desde
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['fecha_vigencia_hasta'],
+        message: 'No puede ser anterior a la fecha de vigencia desde',
+      })
+    }
+  })
+
+export type EstadoFormularioSeguimiento = {
+  error: string | null
+  errores?: Record<string, string[]>
+}
+
+export async function actualizarSeguimientoTramite(
+  id: string,
+  _estadoPrevio: EstadoFormularioSeguimiento,
+  formData: FormData
+): Promise<EstadoFormularioSeguimiento> {
+  const resultado = esquemaSeguimiento.safeParse({
+    referencia_doc_inicial: String(formData.get('referencia_doc_inicial') ?? ''),
+    fecha_plazo: String(formData.get('fecha_plazo') ?? ''),
+    referencia_doc_respaldo: String(formData.get('referencia_doc_respaldo') ?? ''),
+    fecha_aprobacion: String(formData.get('fecha_aprobacion') ?? ''),
+    fecha_vigencia_desde: String(formData.get('fecha_vigencia_desde') ?? ''),
+    fecha_vigencia_hasta: String(formData.get('fecha_vigencia_hasta') ?? ''),
+  })
+
+  if (!resultado.success) {
+    return { error: 'Revisa los campos marcados.', errores: resultado.error.flatten().fieldErrors }
+  }
+
+  const tramite = await db.query.tramites.findFirst({
+    where: eq(tramites.id, id),
+    with: { tipoTramite: true },
+  })
+  if (!tramite) {
+    return { error: 'El trámite no existe.' }
+  }
+  if (tramite.estado === 'concluido' || tramite.estado === 'anulado') {
+    return { error: 'No se pueden editar los datos de seguimiento de un trámite concluido o anulado.' }
+  }
+
+  const d = resultado.data
+
+  // Si se define la fecha de inicio de vigencia y no se indica la fecha hasta
+  // a mano, se calcula sola con la vigencia en meses del tipo de trámite.
+  let fechaVigenciaHasta = d.fecha_vigencia_hasta || null
+  if (!fechaVigenciaHasta && d.fecha_vigencia_desde && tramite.tipoTramite.vigencia_meses) {
+    fechaVigenciaHasta = calcularFechaVigenciaHasta(d.fecha_vigencia_desde, tramite.tipoTramite.vigencia_meses)
+  }
+
+  await db
+    .update(tramites)
+    .set({
+      referencia_doc_inicial: d.referencia_doc_inicial || null,
+      fecha_plazo: d.fecha_plazo || null,
+      referencia_doc_respaldo: d.referencia_doc_respaldo || null,
+      fecha_aprobacion: d.fecha_aprobacion || null,
+      fecha_vigencia_desde: d.fecha_vigencia_desde || null,
+      fecha_vigencia_hasta: fechaVigenciaHasta,
+      updated_at: new Date(),
+    })
+    .where(eq(tramites.id, id))
+
+  revalidatePath(`/tramites/${id}`)
+  return { error: null }
 }

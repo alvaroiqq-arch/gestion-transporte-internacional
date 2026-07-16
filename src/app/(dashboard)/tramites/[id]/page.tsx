@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { tramites, tramite_vehiculos, vehiculos, usuarios } from '@/lib/db/schema'
 import { Button } from '@/components/ui/button'
-import { cambiarEstadoTramite } from '@/actions/tramites'
+import { cambiarEstadoTramite, actualizarSeguimientoTramite } from '@/actions/tramites'
 import { registrarPago, anularPago, validarPago } from '@/actions/pagos'
 import { registrarDocumento } from '@/actions/documentos'
 import { calcularSaldoTramite } from '@/lib/calculos/saldo'
@@ -11,6 +11,7 @@ import { crearClienteServidor } from '@/lib/supabase/server'
 import { obtenerUrlFirmada } from '@/lib/supabase/storage'
 import { FormularioPago } from '@/components/pagos/formulario-pago'
 import { FormularioDocumento } from '@/components/documentos/formulario-documento'
+import { FormularioSeguimiento } from '@/components/tramites/formulario-seguimiento'
 
 const etiquetaEstado: Record<string, string> = {
   en_curso: 'En curso',
@@ -124,6 +125,41 @@ export default async function PaginaDetalleTramite({ params }: { params: Promise
         <dt>Fecha de solicitud</dt>
         <dd>{tramite.fecha_solicitud}</dd>
 
+        {tramite.referencia_doc_inicial && (
+          <>
+            <dt>Referencia documento inicial</dt>
+            <dd>{tramite.referencia_doc_inicial}</dd>
+          </>
+        )}
+
+        {tramite.fecha_plazo && (
+          <>
+            <dt>Plazo de respuesta</dt>
+            <dd>{tramite.fecha_plazo}</dd>
+          </>
+        )}
+
+        {tramite.fecha_aprobacion && (
+          <>
+            <dt>Fecha de aprobación</dt>
+            <dd>{tramite.fecha_aprobacion}</dd>
+          </>
+        )}
+
+        {tramite.referencia_doc_respaldo && (
+          <>
+            <dt>Referencia documento de respaldo</dt>
+            <dd>{tramite.referencia_doc_respaldo}</dd>
+          </>
+        )}
+
+        {(tramite.fecha_vigencia_desde || tramite.fecha_vigencia_hasta) && (
+          <>
+            <dt>Vigencia</dt>
+            <dd>{tramite.fecha_vigencia_desde ?? '—'} a {tramite.fecha_vigencia_hasta ?? '—'}</dd>
+          </>
+        )}
+
         <dt>Vehículos</dt>
         <dd>
           {vehiculosDelTramite.length > 0
@@ -158,6 +194,27 @@ export default async function PaginaDetalleTramite({ params }: { params: Promise
             <Button variant="secondary" type="submit">Anular</Button>
           </form>
         </div>
+      )}
+
+      {tramite.estado !== 'concluido' && tramite.estado !== 'anulado' && (
+        <>
+          <hr style={{ margin: '32px 0' }} />
+
+          <h2>Datos de seguimiento</h2>
+
+          <FormularioSeguimiento
+            accion={actualizarSeguimientoTramite.bind(null, tramite.id)}
+            valoresIniciales={{
+              referencia_doc_inicial: tramite.referencia_doc_inicial,
+              fecha_plazo: tramite.fecha_plazo,
+              referencia_doc_respaldo: tramite.referencia_doc_respaldo,
+              fecha_aprobacion: tramite.fecha_aprobacion,
+              fecha_vigencia_desde: tramite.fecha_vigencia_desde,
+              fecha_vigencia_hasta: tramite.fecha_vigencia_hasta,
+            }}
+            tieneVigenciaAutomatica={tramite.tipoTramite.vigencia_meses != null}
+          />
+        </>
       )}
 
       <hr style={{ margin: '32px 0' }} />
