@@ -25,6 +25,7 @@ export default async function Home() {
       <nav style={{ margin: '16px 0', display: 'flex', gap: 16 }}>
         <Link href="/empresas">Empresas cliente</Link>
         <Link href="/vehiculos">Vehículos</Link>
+        <Link href="/tipos-tramite">Tipos de trámite</Link>
       </nav>
       <form action={cerrarSesion}>
         <button type="submit">Cerrar sesión</button>
