@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { tramites, tramite_vehiculos, tipos_tramite } from '@/lib/db/schema'
+import { tramites, tramite_vehiculos, tipos_tramite, audit_log } from '@/lib/db/schema'
 import { crearClienteServidor } from '@/lib/supabase/server'
 
 const esquemaTramite = z.object({
@@ -94,7 +94,24 @@ export async function crearTramite(
 const estadosValidos = ['en_curso', 'pendiente_observado', 'concluido', 'anulado'] as const
 
 export async function cambiarEstadoTramite(id: string, estado: (typeof estadosValidos)[number]) {
-  await db.update(tramites).set({ estado, updated_at: new Date() }).where(eq(tramites.id, id))
+  const creadoPorId = await obtenerUsuarioActualId()
+
+  await db.transaction(async (tx) => {
+    const tramiteActual = await tx.query.tramites.findFirst({ where: eq(tramites.id, id) })
+    if (!tramiteActual) return
+
+    await tx.update(tramites).set({ estado, updated_at: new Date() }).where(eq(tramites.id, id))
+
+    await tx.insert(audit_log).values({
+      entidad: 'tramite',
+      entidad_id: id,
+      accion: 'cambio_estado',
+      estado_anterior: tramiteActual.estado,
+      estado_nuevo: estado,
+      created_by: creadoPorId,
+    })
+  })
+
   revalidatePath('/tramites')
   revalidatePath(`/tramites/${id}`)
 }
