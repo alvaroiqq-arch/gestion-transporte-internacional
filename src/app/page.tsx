@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { crearClienteServidor } from '@/lib/supabase/server'
 import { cerrarSesion } from '@/actions/auth'
 import { db } from '@/lib/db'
@@ -21,6 +22,9 @@ export default async function Home() {
           {usuario.pais_gestion ? `, ${usuario.pais_gestion}` : ''})
         </p>
       )}
+      <nav style={{ margin: '16px 0' }}>
+        <Link href="/empresas">Empresas cliente</Link>
+      </nav>
       <form action={cerrarSesion}>
         <button type="submit">Cerrar sesión</button>
       </form>
