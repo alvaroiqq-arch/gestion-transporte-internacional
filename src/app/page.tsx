@@ -22,8 +22,9 @@ export default async function Home() {
           {usuario.pais_gestion ? `, ${usuario.pais_gestion}` : ''})
         </p>
       )}
-      <nav style={{ margin: '16px 0' }}>
+      <nav style={{ margin: '16px 0', display: 'flex', gap: 16 }}>
         <Link href="/empresas">Empresas cliente</Link>
+        <Link href="/vehiculos">Vehículos</Link>
       </nav>
       <form action={cerrarSesion}>
         <button type="submit">Cerrar sesión</button>
