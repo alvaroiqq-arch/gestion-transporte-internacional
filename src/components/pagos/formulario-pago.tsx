@@ -18,7 +18,15 @@ type Usuario = { id: string; nombre: string }
 
 const hoy = () => new Date().toISOString().slice(0, 10)
 
-export function FormularioPago({ accion, usuarios }: { accion: Accion; usuarios: Usuario[] }) {
+export function FormularioPago({
+  accion,
+  usuarios,
+  paisTramite,
+}: {
+  accion: Accion
+  usuarios: Usuario[]
+  paisTramite: 'chile' | 'bolivia'
+}) {
   const [estado, ejecutarAccion, pendiente] = useActionState(accion, { error: null })
   const errores = estado.errores ?? {}
   const formRef = useRef<HTMLFormElement>(null)
@@ -55,6 +63,25 @@ export function FormularioPago({ accion, usuarios }: { accion: Accion; usuarios:
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="pais_recepcion">País donde se recibió el pago</Label>
+        <Select name="pais_recepcion" defaultValue={paisTramite}>
+          <SelectTrigger id="pais_recepcion">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="chile">Chile</SelectItem>
+            <SelectItem value="bolivia">Bolivia</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Normalmente coincide con el país del trámite. Cambialo si el cliente pagó en el otro país.
+        </p>
+        {errores.pais_recepcion && (
+          <p className="mt-1 text-sm text-destructive">{errores.pais_recepcion[0]}</p>
+        )}
       </div>
 
       <div>

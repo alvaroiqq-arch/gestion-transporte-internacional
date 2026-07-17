@@ -23,6 +23,7 @@ const esquemaPago = z.object({
       }
     }, 'Ingresa un monto válido mayor a 0'),
   moneda: z.enum(['CLP', 'BOB', 'USD']),
+  pais_recepcion: z.enum(['chile', 'bolivia'], { message: 'Selecciona dónde se recibió el pago' }),
   metodo_pago: z.enum(['efectivo', 'transferencia', 'deposito', 'otro']),
   responsable_cobro_id: z.string().uuid('Selecciona quién cobró el pago'),
   fecha_pago: z.string().min(1, 'La fecha de pago es obligatoria'),
@@ -60,6 +61,7 @@ export async function registrarPago(
   const resultado = esquemaPago.safeParse({
     monto: String(formData.get('monto') ?? ''),
     moneda: String(formData.get('moneda') ?? ''),
+    pais_recepcion: String(formData.get('pais_recepcion') ?? ''),
     metodo_pago: String(formData.get('metodo_pago') ?? ''),
     responsable_cobro_id: String(formData.get('responsable_cobro_id') ?? ''),
     fecha_pago: String(formData.get('fecha_pago') ?? ''),
@@ -105,6 +107,7 @@ export async function registrarPago(
       .values({
         tramite_id: tramiteId,
         pais_destino: tramite.pais,
+        pais_recepcion: d.pais_recepcion,
         monto: redondearMonto(d.monto, d.moneda),
         moneda: d.moneda,
         metodo_pago: d.metodo_pago,

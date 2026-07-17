@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Decimal from 'decimal.js'
 import { and, count, desc, eq, gte, lte } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { crearClienteServidor } from '@/lib/supabase/server'
@@ -8,6 +9,7 @@ import {
   tramites,
   tipos_tramite,
   usuarios,
+  pagos,
 } from '@/lib/db/schema'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -39,6 +41,7 @@ export default async function PaginaInicio() {
     [{ n: tramitesObservados }],
     porVencer,
     ultimos,
+    fondosPorEnviarABolivia,
   ] = await Promise.all([
     db.select({ n: count() }).from(empresas_cliente).where(eq(empresas_cliente.activo, true)),
     db.select({ n: count() }).from(vehiculos).where(eq(vehiculos.estado, 'habilitado')),
@@ -78,7 +81,35 @@ export default async function PaginaInicio() {
       .innerJoin(tipos_tramite, eq(tramites.tipo_tramite_id, tipos_tramite.id))
       .orderBy(desc(tramites.numero))
       .limit(5),
+    // Fondos cobrados en Chile que corresponden a trámites de Bolivia — dinero
+    // que todavía hay que entregar/transferir a Bolivia
+    db
+      .select({
+        id: pagos.id,
+        monto: pagos.monto,
+        moneda: pagos.moneda,
+        fecha_pago: pagos.fecha_pago,
+        tramiteId: tramites.id,
+        tramiteNumero: tramites.numero,
+        empresa: empresas_cliente.razon_social,
+      })
+      .from(pagos)
+      .innerJoin(tramites, eq(pagos.tramite_id, tramites.id))
+      .innerJoin(empresas_cliente, eq(tramites.empresa_id, empresas_cliente.id))
+      .where(
+        and(
+          eq(pagos.pais_recepcion, 'chile'),
+          eq(pagos.pais_destino, 'bolivia'),
+          eq(pagos.estado, 'pagado')
+        )
+      )
+      .orderBy(desc(pagos.fecha_pago)),
   ])
+
+  const totalesPorEnviar = fondosPorEnviarABolivia.reduce<Record<string, Decimal>>((acc, p) => {
+    acc[p.moneda] = (acc[p.moneda] ?? new Decimal(0)).plus(p.monto)
+    return acc
+  }, {})
 
   const tarjetas = [
     { etiqueta: 'Trámites en curso', valor: tramitesEnCurso, href: '/tramites' },
@@ -111,6 +142,43 @@ export default async function PaginaInicio() {
           </Link>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Fondos cobrados en Chile por trámites de Bolivia</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {fondosPorEnviarABolivia.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No hay fondos pendientes de entregar a Bolivia.</p>
+          ) : (
+            <>
+              <p className="mb-3 text-sm font-medium">
+                Total por entregar:{' '}
+                {Object.entries(totalesPorEnviar)
+                  .map(([moneda, monto]) => `${monto.toString()} ${moneda}`)
+                  .join(' · ')}
+              </p>
+              <ul className="flex flex-col divide-y divide-border">
+                {fondosPorEnviarABolivia.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-4 py-2.5">
+                    <div className="min-w-0">
+                      <Link href={`/tramites/${p.tramiteId}`} className="font-medium hover:underline">
+                        Trámite N° {p.tramiteNumero}
+                      </Link>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {p.empresa} · cobrado {p.fecha_pago}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-medium tabular-nums">
+                      {p.monto} {p.moneda}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

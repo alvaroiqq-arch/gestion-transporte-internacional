@@ -242,6 +242,7 @@ export default async function PaginaDetalleTramite({ params }: { params: Promise
                   <TableRow className="bg-muted/40">
                     <TableHead>Fecha</TableHead>
                     <TableHead>Monto</TableHead>
+                    <TableHead>Recibido en</TableHead>
                     <TableHead>Método</TableHead>
                     <TableHead>Responsable</TableHead>
                     <TableHead>Estado</TableHead>
@@ -255,6 +256,16 @@ export default async function PaginaDetalleTramite({ params }: { params: Promise
                     <TableRow key={p.id}>
                       <TableCell className="tabular-nums">{p.fecha_pago}</TableCell>
                       <TableCell className="tabular-nums">{p.monto} {p.moneda}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <PaisBadge pais={p.pais_recepcion} />
+                          {p.pais_recepcion !== p.pais_destino && (
+                            <span className="text-xs text-muted-foreground">
+                              (destino: {p.pais_destino === 'chile' ? 'Chile' : 'Bolivia'})
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{etiquetaMetodoPago[p.metodo_pago]}</TableCell>
                       <TableCell>{p.responsableCobro.nombre}</TableCell>
                       <TableCell>
@@ -303,7 +314,11 @@ export default async function PaginaDetalleTramite({ params }: { params: Promise
           {tramite.estado !== 'anulado' && (
             <div className="border-t border-border pt-4">
               <p className="mb-3 text-sm font-medium">Registrar pago</p>
-              <FormularioPago accion={registrarPago.bind(null, tramite.id)} usuarios={responsablesDisponibles} />
+              <FormularioPago
+                accion={registrarPago.bind(null, tramite.id)}
+                usuarios={responsablesDisponibles}
+                paisTramite={tramite.pais}
+              />
             </div>
           )}
         </CardContent>

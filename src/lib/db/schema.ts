@@ -230,6 +230,7 @@ export const pagos = pgTable('pagos', {
   tramite_id: uuid('tramite_id').notNull().references(() => tramites.id),
 
   pais_destino: paisEnum('pais_destino').notNull(), // copiado de tramites.pais — define la "caja" del reporte, no la moneda
+  pais_recepcion: paisEnum('pais_recepcion').notNull(), // dónde se cobró físicamente — puede diferir de pais_destino (ej. cliente paga en Chile un trámite de Bolivia)
   monto: decimal('monto', { precision: 14, scale: 2 }).notNull(),
   moneda: monedaEnum('moneda').notNull(), // libre: CLP, BOB o USD según cómo se pagó realmente
 
@@ -253,6 +254,7 @@ export const pagos = pgTable('pagos', {
 }, (t) => ({
   idx_tramite: index('idx_pagos_tramite').on(t.tramite_id),
   idx_pais_destino: index('idx_pagos_pais_destino').on(t.pais_destino),
+  idx_pais_recepcion: index('idx_pagos_pais_recepcion').on(t.pais_recepcion),
   idx_fecha_pago: index('idx_pagos_fecha').on(t.fecha_pago),
 }))
 
