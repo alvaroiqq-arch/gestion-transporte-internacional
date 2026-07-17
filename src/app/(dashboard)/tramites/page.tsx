@@ -24,7 +24,7 @@ export default async function PaginaTramites() {
   let usuarioActual = null
   if (authUser) {
     usuarioActual = await db.query.usuarios.findFirst({
-      where: eq(usuarios.supabase_auth_id, authUser.id),
+      where: (usuarios, { eq }) => eq(usuarios.supabase_auth_id, authUser.id),
     })
   }
 

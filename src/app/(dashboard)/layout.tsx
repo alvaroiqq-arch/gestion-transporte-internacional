@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   const usuario = user
-    ? await db.query.usuarios.findFirst({ where: eq(usuarios.supabase_auth_id, user.id) })
+    ? await db.query.usuarios.findFirst({ where: (usuarios, { eq }) => eq(usuarios.supabase_auth_id, user.id) })
     : null
 
   return (

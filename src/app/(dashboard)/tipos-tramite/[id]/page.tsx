@@ -9,7 +9,7 @@ import { actualizarTipoTramite } from '@/actions/tipos-tramite'
 export default async function PaginaEditarTipoTramite({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const tipo = await db.query.tipos_tramite.findFirst({ where: eq(tipos_tramite.id, id) })
+  const tipo = await db.query.tipos_tramite.findFirst({ where: (tipos_tramite, { eq }) => eq(tipos_tramite.id, id) })
 
   if (!tipo) notFound()
 

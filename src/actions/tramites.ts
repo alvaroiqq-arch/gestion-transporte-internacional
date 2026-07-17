@@ -90,13 +90,6 @@ export async function crearTramite(
     }
   }
 
-  if (tipoTramite.requiere_vehiculo && d.vehiculo_ids.length === 0) {
-    return {
-      error: 'Este tipo de trámite requiere al menos un vehículo.',
-      errores: { vehiculo_ids: ['Selecciona al menos un vehículo'] },
-    }
-  }
-
   // Parsear el monto ajustado; si es distinto del precio del tipo, queda registrado el acuerdo con el cliente
   const montoAjustado = new Decimal(d.monto_total).toString()
 
@@ -131,7 +124,7 @@ export async function cambiarEstadoTramite(id: string, estado: (typeof estadosVa
   if (!usuarioActual) return
 
   await db.transaction(async (tx) => {
-    const tramiteActual = await tx.query.tramites.findFirst({ where: eq(tramites.id, id) })
+    const tramiteActual = await tx.query.tramites.findFirst({ where: (tramites, { eq }) => eq(tramites.id, id) })
     if (!tramiteActual) return
 
     // Validar permisos por país: Bolivia solo edita Bolivia, Chile edita TODO

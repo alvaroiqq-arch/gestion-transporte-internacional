@@ -50,7 +50,7 @@ export async function registrarDocumento(
     return { error: 'Selecciona el archivo del documento.', errores: { archivo: ['Selecciona un archivo'] } }
   }
 
-  const tramite = await db.query.tramites.findFirst({ where: eq(tramites.id, tramiteId) })
+  const tramite = await db.query.tramites.findFirst({ where: (tramites, { eq }) => eq(tramites.id, tramiteId) })
   if (!tramite) {
     return { error: 'El trámite no existe.' }
   }

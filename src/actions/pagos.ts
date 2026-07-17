@@ -72,7 +72,7 @@ export async function registrarPago(
 
   const d = resultado.data
 
-  const tramite = await db.query.tramites.findFirst({ where: eq(tramites.id, tramiteId) })
+  const tramite = await db.query.tramites.findFirst({ where: (tramites, { eq }) => eq(tramites.id, tramiteId) })
   if (!tramite) {
     return { error: 'El trámite no existe.' }
   }
@@ -135,7 +135,7 @@ export async function anularPago(id: string, tramiteId: string) {
   const creadoPorId = usuarioActual?.id ?? null
 
   await db.transaction(async (tx) => {
-    const pagoActual = await tx.query.pagos.findFirst({ where: eq(pagos.id, id) })
+    const pagoActual = await tx.query.pagos.findFirst({ where: (pagos, { eq }) => eq(pagos.id, id) })
     if (!pagoActual) return
 
     await tx.update(pagos).set({ estado: 'anulado' }).where(eq(pagos.id, id))
@@ -161,7 +161,7 @@ export async function validarPago(id: string, tramiteId: string) {
   if (!puedeValidarPagosBolivia(usuarioActual)) return
 
   await db.transaction(async (tx) => {
-    const pagoActual = await tx.query.pagos.findFirst({ where: eq(pagos.id, id) })
+    const pagoActual = await tx.query.pagos.findFirst({ where: (pagos, { eq }) => eq(pagos.id, id) })
     if (!pagoActual || pagoActual.estado !== 'pendiente' || pagoActual.pais_destino !== 'bolivia') return
 
     await tx

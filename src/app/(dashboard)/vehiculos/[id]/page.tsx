@@ -10,7 +10,7 @@ export default async function PaginaEditarVehiculo({ params }: { params: Promise
   const { id } = await params
 
   const [vehiculo, empresas] = await Promise.all([
-    db.query.vehiculos.findFirst({ where: eq(vehiculos.id, id) }),
+    db.query.vehiculos.findFirst({ where: (vehiculos, { eq }) => eq(vehiculos.id, id) }),
     db.select({ id: empresas_cliente.id, razon_social: empresas_cliente.razon_social }).from(empresas_cliente),
   ])
 

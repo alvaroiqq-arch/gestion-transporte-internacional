@@ -49,7 +49,7 @@ export default async function PaginaDetalleTramite({ params }: { params: Promise
   const { id } = await params
 
   const tramite = await db.query.tramites.findFirst({
-    where: eq(tramites.id, id),
+    where: (tramites, { eq }) => eq(tramites.id, id),
     with: {
       empresa: true,
       tipoTramite: true,
@@ -76,7 +76,7 @@ export default async function PaginaDetalleTramite({ params }: { params: Promise
 
   const { data: { user } } = await supabase.auth.getUser()
   const usuarioActual = user
-    ? await db.query.usuarios.findFirst({ where: eq(usuarios.supabase_auth_id, user.id) })
+    ? await db.query.usuarios.findFirst({ where: (usuarios, { eq }) => eq(usuarios.supabase_auth_id, user.id) })
     : null
 
   // Los pagos de trámites de Bolivia requieren validación de un usuario a
