@@ -38,6 +38,18 @@ async function obtenerUsuarioActualId(): Promise<string | null> {
   return usuario?.id ?? null
 }
 
+// Obtiene el usuario actual con todos sus datos (incluyendo pais_gestion para filtros de permisos)
+async function obtenerUsuarioActual() {
+  const supabase = await crearClienteServidor()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const usuario = await db.query.usuarios.findFirst({
+    where: (usuarios, { eq }) => eq(usuarios.supabase_auth_id, user.id),
+  })
+  return usuario ?? null
+}
+
 export async function crearTramite(
   _estadoPrevio: EstadoFormularioTramite,
   formData: FormData
@@ -57,6 +69,12 @@ export async function crearTramite(
 
   const d = resultado.data
 
+  // Obtener usuario actual para validar permisos por país
+  const usuarioActual = await obtenerUsuarioActual()
+  if (!usuarioActual) {
+    return { error: 'No hay sesión activa.' }
+  }
+
   const tipoTramite = await db.query.tipos_tramite.findFirst({
     where: eq(tipos_tramite.id, d.tipo_tramite_id),
   })
@@ -65,14 +83,19 @@ export async function crearTramite(
     return { error: 'El tipo de trámite seleccionado no existe.' }
   }
 
+  // Si el usuario tiene país de gestión asignado, solo puede crear trámites de ese país
+  if (usuarioActual.pais_gestion && tipoTramite.pais !== usuarioActual.pais_gestion) {
+    return {
+      error: `No tienes permiso para crear trámites de ${tipoTramite.pais}. Solo puedes crear trámites de ${usuarioActual.pais_gestion}.`,
+    }
+  }
+
   if (tipoTramite.requiere_vehiculo && d.vehiculo_ids.length === 0) {
     return {
       error: 'Este tipo de trámite requiere al menos un vehículo.',
       errores: { vehiculo_ids: ['Selecciona al menos un vehículo'] },
     }
   }
-
-  const creadoPorId = await obtenerUsuarioActualId()
 
   // Parsear el monto ajustado; si es distinto del precio del tipo, queda registrado el acuerdo con el cliente
   const montoAjustado = new Decimal(d.monto_total).toString()
@@ -87,7 +110,7 @@ export async function crearTramite(
       monto_total: montoAjustado,
       moneda: tipoTramite.moneda,
       notas: d.notas || null,
-      created_by: creadoPorId,
+      created_by: usuarioActual.id,
     })
     .returning({ id: tramites.id })
 
@@ -104,11 +127,17 @@ export async function crearTramite(
 const estadosValidos = ['en_curso', 'pendiente_observado', 'concluido', 'anulado'] as const
 
 export async function cambiarEstadoTramite(id: string, estado: (typeof estadosValidos)[number]) {
-  const creadoPorId = await obtenerUsuarioActualId()
+  const usuarioActual = await obtenerUsuarioActual()
+  if (!usuarioActual) return
 
   await db.transaction(async (tx) => {
     const tramiteActual = await tx.query.tramites.findFirst({ where: eq(tramites.id, id) })
     if (!tramiteActual) return
+
+    // Validar que el usuario tiene permiso para editar este trámite (según país)
+    if (usuarioActual.pais_gestion && tramiteActual.pais !== usuarioActual.pais_gestion) {
+      return // Sin permiso: no hacer nada
+    }
 
     await tx.update(tramites).set({ estado, updated_at: new Date() }).where(eq(tramites.id, id))
 
@@ -118,7 +147,7 @@ export async function cambiarEstadoTramite(id: string, estado: (typeof estadosVa
       accion: 'cambio_estado',
       estado_anterior: tramiteActual.estado,
       estado_nuevo: estado,
-      created_by: creadoPorId,
+      created_by: usuarioActual.id,
     })
   })
 

@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, and } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { tramites, empresas_cliente, tipos_tramite } from '@/lib/db/schema'
+import { tramites, empresas_cliente, tipos_tramite, usuarios } from '@/lib/db/schema'
+import { crearClienteServidor } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -16,6 +17,23 @@ import { PageHeader } from '@/components/layout/page-header'
 import { EstadoTramiteBadge, PaisBadge } from '@/components/estados/estado-badges'
 
 export default async function PaginaTramites() {
+  // Obtener usuario actual para filtrar por país
+  const supabase = await crearClienteServidor()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  let usuarioActual = null
+  if (authUser) {
+    usuarioActual = await db.query.usuarios.findFirst({
+      where: eq(usuarios.supabase_auth_id, authUser.id),
+    })
+  }
+
+  // Construir condición de filtro por país
+  const conditions = []
+  if (usuarioActual?.pais_gestion) {
+    conditions.push(eq(tramites.pais, usuarioActual.pais_gestion))
+  }
+
   const filas = await db
     .select({
       id: tramites.id,
@@ -31,6 +49,7 @@ export default async function PaginaTramites() {
     .from(tramites)
     .innerJoin(empresas_cliente, eq(tramites.empresa_id, empresas_cliente.id))
     .innerJoin(tipos_tramite, eq(tramites.tipo_tramite_id, tipos_tramite.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(tramites.numero))
 
   return (
