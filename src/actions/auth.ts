@@ -18,12 +18,7 @@ export async function iniciarSesion(
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    // DIAGNÓSTICO TEMPORAL: mostrar la causa real del fallo
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '(sin URL)'
-    const keyLen = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').length
-    return {
-      error: `DEBUG: ${error.message} | status=${error.status} | url=${url} | keyLen=${keyLen}`,
-    }
+    return { error: 'Email o contraseña incorrectos.' }
   }
 
   redirect('/')
