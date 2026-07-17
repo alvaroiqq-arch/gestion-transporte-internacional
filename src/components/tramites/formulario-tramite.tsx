@@ -31,12 +31,21 @@ export function FormularioTramite({
 
   const [empresaId, setEmpresaId] = useState('')
   const [tipoId, setTipoId] = useState('')
+  const [montoTotal, setMontoTotal] = useState('')
 
   const vehiculosDeLaEmpresa = useMemo(
     () => vehiculos.filter((v) => v.empresa_id === empresaId),
     [vehiculos, empresaId]
   )
   const tipoSeleccionado = tipos.find((t) => t.id === tipoId)
+
+  const handleTipoChange = (nuevoTipoId: string) => {
+    setTipoId(nuevoTipoId)
+    const tipo = tipos.find((t) => t.id === nuevoTipoId)
+    if (tipo) {
+      setMontoTotal(tipo.precio)
+    }
+  }
 
   return (
     <form action={ejecutarAccion} className="flex flex-col gap-4">
@@ -57,7 +66,7 @@ export function FormularioTramite({
 
       <div>
         <Label htmlFor="tipo_tramite_id">Tipo de trámite</Label>
-        <Select name="tipo_tramite_id" value={tipoId} onValueChange={setTipoId}>
+        <Select name="tipo_tramite_id" value={tipoId} onValueChange={handleTipoChange}>
           <SelectTrigger id="tipo_tramite_id">
             <SelectValue placeholder="Selecciona un tipo de trámite" />
           </SelectTrigger>
@@ -76,6 +85,25 @@ export function FormularioTramite({
         <Label htmlFor="fecha_solicitud">Fecha de solicitud</Label>
         <Input id="fecha_solicitud" name="fecha_solicitud" type="date" required />
         {errores.fecha_solicitud && <p className="mt-1 text-sm text-destructive">{errores.fecha_solicitud[0]}</p>}
+      </div>
+
+      <div>
+        <Label htmlFor="monto_total">
+          Monto total {tipoSeleccionado && `(estándar: ${tipoSeleccionado.precio} ${tipoSeleccionado.moneda})`}
+        </Label>
+        <Input
+          id="monto_total"
+          name="monto_total"
+          inputMode="decimal"
+          placeholder="0"
+          value={montoTotal}
+          onChange={(e) => setMontoTotal(e.target.value)}
+          required
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Ajustá el monto si el cliente negoció un precio distinto.
+        </p>
+        {errores.monto_total && <p className="mt-1 text-sm text-destructive">{errores.monto_total[0]}</p>}
       </div>
 
       {empresaId && (

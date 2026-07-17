@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import Decimal from 'decimal.js'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
@@ -13,6 +14,10 @@ const esquemaTramite = z.object({
   empresa_id: z.string().uuid('Selecciona una empresa'),
   tipo_tramite_id: z.string().uuid('Selecciona un tipo de trámite'),
   fecha_solicitud: z.string().min(1, 'La fecha de solicitud es obligatoria'),
+  monto_total: z.string().min(1, 'El monto es obligatorio').refine(
+    (v) => !Number.isNaN(new Decimal(v).toNumber()),
+    'El monto debe ser un número válido'
+  ),
   vehiculo_ids: z.array(z.string().uuid()).optional().default([]),
   notas: z.string().trim().optional(),
 })
@@ -41,6 +46,7 @@ export async function crearTramite(
     empresa_id: String(formData.get('empresa_id') ?? ''),
     tipo_tramite_id: String(formData.get('tipo_tramite_id') ?? ''),
     fecha_solicitud: String(formData.get('fecha_solicitud') ?? ''),
+    monto_total: String(formData.get('monto_total') ?? ''),
     vehiculo_ids: formData.getAll('vehiculo_ids').map(String),
     notas: String(formData.get('notas') ?? ''),
   })
@@ -68,6 +74,9 @@ export async function crearTramite(
 
   const creadoPorId = await obtenerUsuarioActualId()
 
+  // Parsear el monto ajustado; si es distinto del precio del tipo, queda registrado el acuerdo con el cliente
+  const montoAjustado = new Decimal(d.monto_total).toString()
+
   const [tramite] = await db
     .insert(tramites)
     .values({
@@ -75,7 +84,7 @@ export async function crearTramite(
       pais: tipoTramite.pais,
       empresa_id: d.empresa_id,
       fecha_solicitud: d.fecha_solicitud,
-      monto_total: tipoTramite.precio,
+      monto_total: montoAjustado,
       moneda: tipoTramite.moneda,
       notas: d.notas || null,
       created_by: creadoPorId,
