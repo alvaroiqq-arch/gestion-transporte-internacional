@@ -59,6 +59,13 @@ export const metodoPagoEnum = pgEnum('metodo_pago', [
   'otro',
 ])
 
+// Una remesa nace ya "enviada" (registra un envío que ya se hizo); pasa a
+// 'recibida' cuando alguien a cargo de Bolivia confirma que llegaron los fondos
+export const estadoRemesaEnum = pgEnum('estado_remesa', [
+  'enviada',
+  'recibida',
+])
+
 // ─────────────────────────────────────────
 // 1. USUARIOS
 // Varios usuarios desde Fase 1, cada uno con rol y país de gestión
@@ -238,6 +245,10 @@ export const pagos = pgTable('pagos', {
   estado: estadoPagoEnum('estado').notNull().default('pendiente'),
   responsable_cobro_id: uuid('responsable_cobro_id').notNull().references(() => usuarios.id),
 
+  // Se asigna cuando el pago queda incluido en un envío de fondos a Bolivia
+  // (ver tabla remesas) — null mientras el dinero sigue "pendiente de enviar"
+  remesa_id: uuid('remesa_id').references(() => remesas.id),
+
   // Pagos de trámites de Bolivia requieren validación de un usuario con
   // pais_gestion = 'bolivia' antes de quedar 'pagado'; los de Chile no la requieren
   // y quedan 'pagado' de inmediato (ver CLAUDE.md / regla de negocio de validación)
@@ -256,10 +267,41 @@ export const pagos = pgTable('pagos', {
   idx_pais_destino: index('idx_pagos_pais_destino').on(t.pais_destino),
   idx_pais_recepcion: index('idx_pagos_pais_recepcion').on(t.pais_recepcion),
   idx_fecha_pago: index('idx_pagos_fecha').on(t.fecha_pago),
+  idx_remesa: index('idx_pagos_remesa').on(t.remesa_id),
 }))
 
 // ─────────────────────────────────────────
-// 7. DOCUMENTOS GENERADOS
+// 7. REMESAS
+// Envíos de fondos cobrados en Chile (por trámites de Bolivia) hacia Bolivia.
+// Una remesa agrupa pagos validados de una sola moneda; nace en estado
+// 'enviada' y pasa a 'recibida' cuando Bolivia confirma la llegada de fondos.
+// El monto total se calcula desde los pagos incluidos, no se guarda a mano.
+// ─────────────────────────────────────────
+
+export const remesas = pgTable('remesas', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  numero: integer('numero').generatedByDefaultAsIdentity().notNull(), // correlativo autogenerado
+
+  moneda: monedaEnum('moneda').notNull(),
+  estado: estadoRemesaEnum('estado').notNull().default('enviada'),
+
+  fecha_envio: date('fecha_envio').notNull(),
+  enviado_por_id: uuid('enviado_por_id').references(() => usuarios.id),
+
+  fecha_recepcion: timestamp('fecha_recepcion', { withTimezone: true }),
+  recibido_por_id: uuid('recibido_por_id').references(() => usuarios.id),
+
+  notas: text('notas'),
+
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  created_by: uuid('created_by').references(() => usuarios.id),
+}, (t) => ({
+  numero_unico: uniqueIndex('idx_remesas_numero_unico').on(t.numero),
+  idx_estado: index('idx_remesas_estado').on(t.estado),
+}))
+
+// ─────────────────────────────────────────
+// 8. DOCUMENTOS GENERADOS
 // ─────────────────────────────────────────
 
 export const documentos_generados = pgTable('documentos_generados', {
@@ -279,7 +321,7 @@ export const documentos_generados = pgTable('documentos_generados', {
 }))
 
 // ─────────────────────────────────────────
-// 8. AUDIT LOG
+// 9. AUDIT LOG
 // Solo INSERT — nunca UPDATE/DELETE
 // ─────────────────────────────────────────
 
@@ -355,6 +397,22 @@ export const pagosRelations = relations(pagos, ({ one }) => ({
   }),
   validadoPor: one(usuarios, {
     fields: [pagos.validado_por_id],
+    references: [usuarios.id],
+  }),
+  remesa: one(remesas, {
+    fields: [pagos.remesa_id],
+    references: [remesas.id],
+  }),
+}))
+
+export const remesasRelations = relations(remesas, ({ one, many }) => ({
+  pagos: many(pagos),
+  enviadoPor: one(usuarios, {
+    fields: [remesas.enviado_por_id],
+    references: [usuarios.id],
+  }),
+  recibidoPor: one(usuarios, {
+    fields: [remesas.recibido_por_id],
     references: [usuarios.id],
   }),
 }))

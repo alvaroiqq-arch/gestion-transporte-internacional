@@ -9,6 +9,7 @@ import {
   Truck,
   Tags,
   FileText,
+  Banknote,
   LogOut,
   Menu,
   X,
@@ -25,6 +26,7 @@ type Usuario = {
 const enlaces = [
   { href: '/', etiqueta: 'Inicio', icono: LayoutDashboard, exacto: true },
   { href: '/tramites', etiqueta: 'Trámites', icono: FileText },
+  { href: '/remesas', etiqueta: 'Remesas', icono: Banknote },
   { href: '/empresas', etiqueta: 'Empresas', icono: Building2 },
   { href: '/vehiculos', etiqueta: 'Vehículos', icono: Truck },
   { href: '/tipos-tramite', etiqueta: 'Tipos de trámite', icono: Tags },

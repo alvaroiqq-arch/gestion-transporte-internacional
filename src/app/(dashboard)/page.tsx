@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import Decimal from 'decimal.js'
-import { and, count, desc, eq, gte, lte } from 'drizzle-orm'
+import { and, count, desc, eq, gte, isNull, lte } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { crearClienteServidor } from '@/lib/supabase/server'
 import {
@@ -10,7 +9,9 @@ import {
   tipos_tramite,
   usuarios,
   pagos,
+  remesas,
 } from '@/lib/db/schema'
+import { sumarPorMoneda } from '@/lib/calculos/remesas'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EstadoTramiteBadge, PaisBadge } from '@/components/estados/estado-badges'
@@ -42,6 +43,7 @@ export default async function PaginaInicio() {
     porVencer,
     ultimos,
     fondosPorEnviarABolivia,
+    remesasEnTransito,
   ] = await Promise.all([
     db.select({ n: count() }).from(empresas_cliente).where(eq(empresas_cliente.activo, true)),
     db.select({ n: count() }).from(vehiculos).where(eq(vehiculos.estado, 'habilitado')),
@@ -100,16 +102,40 @@ export default async function PaginaInicio() {
         and(
           eq(pagos.pais_recepcion, 'chile'),
           eq(pagos.pais_destino, 'bolivia'),
-          eq(pagos.estado, 'pagado')
+          eq(pagos.estado, 'pagado'),
+          isNull(pagos.remesa_id)
         )
       )
       .orderBy(desc(pagos.fecha_pago)),
+    // Remesas ya enviadas pero cuya recepción en Bolivia aún no se confirmó
+    db
+      .select({
+        id: remesas.id,
+        numero: remesas.numero,
+        moneda: remesas.moneda,
+        fecha_envio: remesas.fecha_envio,
+        monto: pagos.monto,
+      })
+      .from(remesas)
+      .innerJoin(pagos, eq(pagos.remesa_id, remesas.id))
+      .where(eq(remesas.estado, 'enviada')),
   ])
 
-  const totalesPorEnviar = fondosPorEnviarABolivia.reduce<Record<string, Decimal>>((acc, p) => {
-    acc[p.moneda] = (acc[p.moneda] ?? new Decimal(0)).plus(p.monto)
-    return acc
-  }, {})
+  const totalesPorEnviar = sumarPorMoneda(fondosPorEnviarABolivia)
+
+  const pagosPorRemesa = new Map<string, typeof remesasEnTransito>()
+  for (const r of remesasEnTransito) {
+    const grupo = pagosPorRemesa.get(r.id) ?? []
+    grupo.push(r)
+    pagosPorRemesa.set(r.id, grupo)
+  }
+  const listaRemesasEnTransito = [...pagosPorRemesa.entries()].map(([id, filas]) => ({
+    id,
+    numero: filas[0].numero,
+    moneda: filas[0].moneda,
+    fecha_envio: filas[0].fecha_envio,
+    total: sumarPorMoneda(filas)[filas[0].moneda] ?? '0',
+  }))
 
   const tarjetas = [
     { etiqueta: 'Trámites en curso', valor: tramitesEnCurso, href: '/tramites' },
@@ -144,18 +170,23 @@ export default async function PaginaInicio() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Fondos cobrados en Chile por trámites de Bolivia</CardTitle>
+        <CardHeader className="flex-row items-center justify-between">
+          <CardTitle>Fondos pendientes de enviar a Bolivia</CardTitle>
+          {fondosPorEnviarABolivia.length > 0 && (
+            <Button size="sm" asChild>
+              <Link href="/remesas/nueva">Armar envío</Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {fondosPorEnviarABolivia.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay fondos pendientes de entregar a Bolivia.</p>
+            <p className="text-sm text-muted-foreground">No hay fondos pendientes de enviar a Bolivia.</p>
           ) : (
             <>
               <p className="mb-3 text-sm font-medium">
-                Total por entregar:{' '}
+                Total pendiente:{' '}
                 {Object.entries(totalesPorEnviar)
-                  .map(([moneda, monto]) => `${monto.toString()} ${moneda}`)
+                  .map(([moneda, monto]) => `${monto} ${moneda}`)
                   .join(' · ')}
               </p>
               <ul className="flex flex-col divide-y divide-border">
@@ -176,6 +207,33 @@ export default async function PaginaInicio() {
                 ))}
               </ul>
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Remesas en tránsito</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {listaRemesasEnTransito.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No hay envíos esperando confirmación de Bolivia.</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-border">
+              {listaRemesasEnTransito.map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-4 py-2.5">
+                  <div className="min-w-0">
+                    <Link href={`/remesas/${r.id}`} className="font-medium hover:underline">
+                      Remesa N° {r.numero}
+                    </Link>
+                    <p className="truncate text-sm text-muted-foreground">Enviada {r.fecha_envio}</p>
+                  </div>
+                  <span className="shrink-0 text-sm font-medium tabular-nums">
+                    {r.total} {r.moneda}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </CardContent>
       </Card>

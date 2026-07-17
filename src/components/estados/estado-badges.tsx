@@ -16,6 +16,11 @@ const pago: Record<string, { texto: string; tono: Tono }> = {
   anulado: { texto: 'Anulado', tono: 'peligro' },
 }
 
+const remesa: Record<string, { texto: string; tono: Tono }> = {
+  enviada: { texto: 'Enviada', tono: 'advertencia' },
+  recibida: { texto: 'Recibida', tono: 'exito' },
+}
+
 const vehiculo: Record<string, { texto: string; tono: Tono }> = {
   habilitado: { texto: 'Habilitado', tono: 'exito' },
   inhabilitado: { texto: 'Inhabilitado', tono: 'neutral' },
@@ -29,6 +34,11 @@ export function EstadoTramiteBadge({ estado }: { estado: string }) {
 
 export function EstadoPagoBadge({ estado }: { estado: string }) {
   const e = pago[estado] ?? { texto: estado, tono: 'neutral' as const }
+  return <Badge tono={e.tono}>{e.texto}</Badge>
+}
+
+export function EstadoRemesaBadge({ estado }: { estado: string }) {
+  const e = remesa[estado] ?? { texto: estado, tono: 'neutral' as const }
   return <Badge tono={e.tono}>{e.texto}</Badge>
 }
 

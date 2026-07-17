@@ -36,6 +36,13 @@
       "when": 1784306650918,
       "tag": "0004_wooden_nico_minoru",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784307940799,
+      "tag": "0005_colossal_namorita",
+      "breakpoints": true
     }
   ]
 }
