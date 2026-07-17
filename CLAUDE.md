@@ -21,9 +21,9 @@ Fase 1**, cada uno con un rol y país de gestión asignado:
 
 | Usuario | Rol | País de gestión |
 |---|---|---|
-| Angela | Administradora | Chile |
+| Angela Morejon | Administradora | Chile |
 | Dieter Morejón | Colaborador | Bolivia |
-| Álvaro Escalera | Apoyo a Angela | Chile |
+| Álvaro Escalera | Apoyo a Angela Morejon | Chile |
 
 El campo `responsable_cobro` de un pago referencia a uno de estos usuarios
 (no texto libre) para poder saber quién cobró cada pago.

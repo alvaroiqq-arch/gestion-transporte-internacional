@@ -83,7 +83,7 @@ export async function crearTramite(
     return { error: 'El tipo de trámite seleccionado no existe.' }
   }
 
-  // Chile (Angela/Álvaro) ve y crea TODO; Bolivia (Dieter) solo crea Bolivia
+  // Chile (Angela Morejon/Álvaro) ve y crea TODO; Bolivia (Dieter) solo crea Bolivia
   if (usuarioActual.pais_gestion === 'bolivia' && tipoTramite.pais !== 'bolivia') {
     return {
       error: 'No tienes permiso para crear trámites de Chile. Solo puedes crear trámites de Bolivia.',
