@@ -14,7 +14,6 @@ import {
 import { sumarPorMoneda, calcularMontoNeto } from '@/lib/calculos/remesas'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { EstadoTramiteBadge, PaisBadge } from '@/components/estados/estado-badges'
 
 function sumarDias(fecha: string, dias: number): string {
   const [a, m, d] = fecha.split('-').map(Number)
@@ -41,7 +40,6 @@ export default async function PaginaInicio() {
     [{ n: tramitesEnCurso }],
     [{ n: tramitesObservados }],
     porVencer,
-    ultimos,
     fondosPorEnviarABolivia,
     remesasEnTransito,
   ] = await Promise.all([
@@ -68,21 +66,6 @@ export default async function PaginaInicio() {
         )
       )
       .orderBy(tramites.fecha_vigencia_hasta),
-    db
-      .select({
-        id: tramites.id,
-        numero: tramites.numero,
-        estado: tramites.estado,
-        pais: tramites.pais,
-        fecha_solicitud: tramites.fecha_solicitud,
-        empresa: empresas_cliente.razon_social,
-        tipo: tipos_tramite.nombre,
-      })
-      .from(tramites)
-      .innerJoin(empresas_cliente, eq(tramites.empresa_id, empresas_cliente.id))
-      .innerJoin(tipos_tramite, eq(tramites.tipo_tramite_id, tipos_tramite.id))
-      .orderBy(desc(tramites.numero))
-      .limit(5),
     // Fondos cobrados en Chile que corresponden a trámites de Bolivia — dinero
     // que todavía hay que entregar/transferir a Bolivia
     db
@@ -264,37 +247,6 @@ export default async function PaginaInicio() {
                   <span className="shrink-0 text-sm font-medium text-[#8a3626] dark:text-[#e0a99c]">
                     Vence {t.fecha_vigencia_hasta}
                   </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Últimos trámites</CardTitle>
-          <Button variant="secondary" size="sm" asChild>
-            <Link href="/tramites">Ver todos</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {ultimos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aún no hay trámites registrados.</p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-border">
-              {ultimos.map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-4 py-2.5">
-                  <div className="min-w-0">
-                    <Link href={`/tramites/${t.id}`} className="font-medium hover:underline">
-                      N° {t.numero} · {t.empresa}
-                    </Link>
-                    <p className="truncate text-sm text-muted-foreground">{t.tipo}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <PaisBadge pais={t.pais} />
-                    <EstadoTramiteBadge estado={t.estado} />
-                  </div>
                 </li>
               ))}
             </ul>
