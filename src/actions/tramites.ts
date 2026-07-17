@@ -83,10 +83,10 @@ export async function crearTramite(
     return { error: 'El tipo de trámite seleccionado no existe.' }
   }
 
-  // Si el usuario tiene país de gestión asignado, solo puede crear trámites de ese país
-  if (usuarioActual.pais_gestion && tipoTramite.pais !== usuarioActual.pais_gestion) {
+  // Chile (Angela/Álvaro) ve y crea TODO; Bolivia (Dieter) solo crea Bolivia
+  if (usuarioActual.pais_gestion === 'bolivia' && tipoTramite.pais !== 'bolivia') {
     return {
-      error: `No tienes permiso para crear trámites de ${tipoTramite.pais}. Solo puedes crear trámites de ${usuarioActual.pais_gestion}.`,
+      error: 'No tienes permiso para crear trámites de Chile. Solo puedes crear trámites de Bolivia.',
     }
   }
 
@@ -134,8 +134,8 @@ export async function cambiarEstadoTramite(id: string, estado: (typeof estadosVa
     const tramiteActual = await tx.query.tramites.findFirst({ where: eq(tramites.id, id) })
     if (!tramiteActual) return
 
-    // Validar que el usuario tiene permiso para editar este trámite (según país)
-    if (usuarioActual.pais_gestion && tramiteActual.pais !== usuarioActual.pais_gestion) {
+    // Validar permisos por país: Bolivia solo edita Bolivia, Chile edita TODO
+    if (usuarioActual.pais_gestion === 'bolivia' && tramiteActual.pais !== 'bolivia') {
       return // Sin permiso: no hacer nada
     }
 

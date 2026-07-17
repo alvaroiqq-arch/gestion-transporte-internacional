@@ -28,11 +28,13 @@ export default async function PaginaTramites() {
     })
   }
 
-  // Construir condición de filtro por país
+  // Filtro por país: Bolivia solo ve Bolivia, Chile ve TODO
   const conditions = []
-  if (usuarioActual?.pais_gestion) {
-    conditions.push(eq(tramites.pais, usuarioActual.pais_gestion))
+  if (usuarioActual?.pais_gestion === 'bolivia') {
+    // Dieter solo ve trámites de Bolivia
+    conditions.push(eq(tramites.pais, 'bolivia'))
   }
+  // Si pais_gestion es 'chile' o null (admin), ver TODO (sin filtro)
 
   const filas = await db
     .select({
