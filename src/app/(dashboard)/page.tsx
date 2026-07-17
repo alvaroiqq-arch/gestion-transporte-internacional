@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { and, count, desc, eq, gte, isNull, lte } from 'drizzle-orm'
+import { and, count, eq, gte, lte } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { crearClienteServidor } from '@/lib/supabase/server'
 import {
@@ -13,7 +13,6 @@ import {
 } from '@/lib/db/schema'
 import { sumarPorMoneda, calcularMontoNeto } from '@/lib/calculos/remesas'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 
 function sumarDias(fecha: string, dias: number): string {
   const [a, m, d] = fecha.split('-').map(Number)
@@ -40,7 +39,6 @@ export default async function PaginaInicio() {
     [{ n: tramitesEnCurso }],
     [{ n: tramitesObservados }],
     porVencer,
-    fondosPorEnviarABolivia,
     remesasEnTransito,
   ] = await Promise.all([
     db.select({ n: count() }).from(empresas_cliente).where(eq(empresas_cliente.activo, true)),
@@ -66,30 +64,6 @@ export default async function PaginaInicio() {
         )
       )
       .orderBy(tramites.fecha_vigencia_hasta),
-    // Fondos cobrados en Chile que corresponden a trámites de Bolivia — dinero
-    // que todavía hay que entregar/transferir a Bolivia
-    db
-      .select({
-        id: pagos.id,
-        monto: pagos.monto,
-        moneda: pagos.moneda,
-        fecha_pago: pagos.fecha_pago,
-        tramiteId: tramites.id,
-        tramiteNumero: tramites.numero,
-        empresa: empresas_cliente.razon_social,
-      })
-      .from(pagos)
-      .innerJoin(tramites, eq(pagos.tramite_id, tramites.id))
-      .innerJoin(empresas_cliente, eq(tramites.empresa_id, empresas_cliente.id))
-      .where(
-        and(
-          eq(pagos.pais_recepcion, 'chile'),
-          eq(pagos.pais_destino, 'bolivia'),
-          eq(pagos.estado, 'pagado'),
-          isNull(pagos.remesa_id)
-        )
-      )
-      .orderBy(desc(pagos.fecha_pago)),
     // Remesas ya enviadas pero cuya recepción en Bolivia aún no se confirmó
     db
       .select({
@@ -104,8 +78,6 @@ export default async function PaginaInicio() {
       .innerJoin(pagos, eq(pagos.remesa_id, remesas.id))
       .where(eq(remesas.estado, 'enviada')),
   ])
-
-  const totalesPorEnviar = sumarPorMoneda(fondosPorEnviarABolivia)
 
   const pagosPorRemesa = new Map<string, typeof remesasEnTransito>()
   for (const r of remesasEnTransito) {
@@ -155,48 +127,6 @@ export default async function PaginaInicio() {
           </Link>
         ))}
       </div>
-
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Fondos pendientes de enviar a Bolivia</CardTitle>
-          {fondosPorEnviarABolivia.length > 0 && (
-            <Button size="sm" asChild>
-              <Link href="/remesas/nueva">Armar envío</Link>
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          {fondosPorEnviarABolivia.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay fondos pendientes de enviar a Bolivia.</p>
-          ) : (
-            <>
-              <p className="mb-3 text-sm font-medium">
-                Total pendiente:{' '}
-                {Object.entries(totalesPorEnviar)
-                  .map(([moneda, monto]) => `${monto} ${moneda}`)
-                  .join(' · ')}
-              </p>
-              <ul className="flex flex-col divide-y divide-border">
-                {fondosPorEnviarABolivia.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-4 py-2.5">
-                    <div className="min-w-0">
-                      <Link href={`/tramites/${p.tramiteId}`} className="font-medium hover:underline">
-                        Trámite N° {p.tramiteNumero}
-                      </Link>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {p.empresa} · cobrado {p.fecha_pago}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-sm font-medium tabular-nums">
-                      {p.monto} {p.moneda}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
