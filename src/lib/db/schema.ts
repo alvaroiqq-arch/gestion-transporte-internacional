@@ -275,7 +275,9 @@ export const pagos = pgTable('pagos', {
 // Envíos de fondos cobrados en Chile (por trámites de Bolivia) hacia Bolivia.
 // Una remesa agrupa pagos validados de una sola moneda; nace en estado
 // 'enviada' y pasa a 'recibida' cuando Bolivia confirma la llegada de fondos.
-// El monto total se calcula desde los pagos incluidos, no se guarda a mano.
+// El monto total recaudado se calcula desde los pagos incluidos, no se guarda
+// a mano — la comisión de transferencia sí se guarda (no es derivable) y el
+// monto neto que recibe Bolivia se calcula como recaudado - comisión.
 // ─────────────────────────────────────────
 
 export const remesas = pgTable('remesas', {
@@ -284,6 +286,10 @@ export const remesas = pgTable('remesas', {
 
   moneda: monedaEnum('moneda').notNull(),
   estado: estadoRemesaEnum('estado').notNull().default('enviada'),
+
+  // Comisión cobrada por el medio de transferencia — se descuenta del monto
+  // recaudado; lo que Bolivia recibe es siempre menor o igual a lo cobrado en Chile
+  comision: decimal('comision', { precision: 14, scale: 2 }).notNull().default('0'),
 
   fecha_envio: date('fecha_envio').notNull(),
   enviado_por_id: uuid('enviado_por_id').references(() => usuarios.id),

@@ -43,6 +43,13 @@
       "when": 1784307940799,
       "tag": "0005_colossal_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784309609768,
+      "tag": "0006_productive_makkari",
+      "breakpoints": true
     }
   ]
 }

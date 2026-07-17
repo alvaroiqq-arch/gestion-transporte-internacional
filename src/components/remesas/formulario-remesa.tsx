@@ -31,6 +31,7 @@ export function FormularioRemesa({
   const errores = estado.errores ?? {}
 
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
+  const [comision, setComision] = useState('0')
 
   const monedaSeleccionada = useMemo(() => {
     for (const [moneda, pagos] of Object.entries(pagosPorMoneda)) {
@@ -48,6 +49,14 @@ export function FormularioRemesa({
     }
     return acumulado.toString()
   }, [seleccionados, pagosPorMoneda])
+
+  const montoNeto = useMemo(() => {
+    try {
+      return new Decimal(total).minus(comision || '0').toString()
+    } catch {
+      return total
+    }
+  }, [total, comision])
 
   function alternar(id: string) {
     setSeleccionados((prev) => {
@@ -99,8 +108,35 @@ export function FormularioRemesa({
       })}
       {errores.pago_ids && <p className="text-sm text-destructive">{errores.pago_ids[0]}</p>}
 
-      <div className="rounded-lg bg-muted/40 px-3 py-2 text-sm font-medium">
-        Total seleccionado: {total} {monedaSeleccionada ?? ''}
+      <div>
+        <Label htmlFor="comision">Comisión de transferencia</Label>
+        <Input
+          id="comision"
+          name="comision"
+          inputMode="decimal"
+          placeholder="0"
+          value={comision}
+          onChange={(e) => setComision(e.target.value)}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Lo que cobra el banco o el medio de transferencia — se descuenta de lo que recibe Bolivia.
+        </p>
+        {errores.comision && <p className="mt-1 text-sm text-destructive">{errores.comision[0]}</p>}
+      </div>
+
+      <div className="flex flex-col gap-1 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Total recaudado</span>
+          <span className="font-medium tabular-nums">{total} {monedaSeleccionada ?? ''}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Comisión</span>
+          <span className="font-medium tabular-nums">{comision || '0'} {monedaSeleccionada ?? ''}</span>
+        </div>
+        <div className="flex items-center justify-between border-t border-border pt-1">
+          <span className="font-medium">Monto neto a recibir en Bolivia</span>
+          <span className="font-semibold tabular-nums">{montoNeto} {monedaSeleccionada ?? ''}</span>
+        </div>
       </div>
 
       <div>

@@ -11,7 +11,7 @@ import {
   pagos,
   remesas,
 } from '@/lib/db/schema'
-import { sumarPorMoneda } from '@/lib/calculos/remesas'
+import { sumarPorMoneda, calcularMontoNeto } from '@/lib/calculos/remesas'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EstadoTramiteBadge, PaisBadge } from '@/components/estados/estado-badges'
@@ -113,6 +113,7 @@ export default async function PaginaInicio() {
         id: remesas.id,
         numero: remesas.numero,
         moneda: remesas.moneda,
+        comision: remesas.comision,
         fecha_envio: remesas.fecha_envio,
         monto: pagos.monto,
       })
@@ -129,13 +130,16 @@ export default async function PaginaInicio() {
     grupo.push(r)
     pagosPorRemesa.set(r.id, grupo)
   }
-  const listaRemesasEnTransito = [...pagosPorRemesa.entries()].map(([id, filas]) => ({
-    id,
-    numero: filas[0].numero,
-    moneda: filas[0].moneda,
-    fecha_envio: filas[0].fecha_envio,
-    total: sumarPorMoneda(filas)[filas[0].moneda] ?? '0',
-  }))
+  const listaRemesasEnTransito = [...pagosPorRemesa.entries()].map(([id, filas]) => {
+    const totalRecaudado = sumarPorMoneda(filas)[filas[0].moneda] ?? '0'
+    return {
+      id,
+      numero: filas[0].numero,
+      moneda: filas[0].moneda,
+      fecha_envio: filas[0].fecha_envio,
+      montoNeto: calcularMontoNeto(totalRecaudado, filas[0].comision, filas[0].moneda),
+    }
+  })
 
   const tarjetas = [
     { etiqueta: 'Trámites en curso', valor: tramitesEnCurso, href: '/tramites' },
@@ -229,7 +233,7 @@ export default async function PaginaInicio() {
                     <p className="truncate text-sm text-muted-foreground">Enviada {r.fecha_envio}</p>
                   </div>
                   <span className="shrink-0 text-sm font-medium tabular-nums">
-                    {r.total} {r.moneda}
+                    {r.montoNeto} {r.moneda}
                   </span>
                 </li>
               ))}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sumarPorMoneda, tienenMonedaUnica } from './remesas'
+import { sumarPorMoneda, tienenMonedaUnica, calcularMontoNeto } from './remesas'
 
 describe('sumarPorMoneda', () => {
   it('sin pagos, devuelve un objeto vacío', () => {
@@ -43,5 +43,27 @@ describe('tienenMonedaUnica', () => {
 
   it('pagos en monedas distintas', () => {
     expect(tienenMonedaUnica([{ moneda: 'CLP' }, { moneda: 'USD' }])).toBe(false)
+  })
+})
+
+describe('calcularMontoNeto', () => {
+  it('sin comisión, el neto es igual al total recaudado', () => {
+    expect(calcularMontoNeto('100000', '0', 'CLP')).toBe('100000')
+  })
+
+  it('descuenta la comisión del total recaudado', () => {
+    expect(calcularMontoNeto('100000', '2500', 'CLP')).toBe('97500')
+  })
+
+  it('redondea CLP al peso entero', () => {
+    expect(calcularMontoNeto('100000', '2500.6', 'CLP')).toBe('97499')
+  })
+
+  it('redondea BOB/USD a 2 decimales', () => {
+    expect(calcularMontoNeto('500.00', '15.555', 'USD')).toBe('484.45')
+  })
+
+  it('una comisión mayor al total da un neto negativo (se valida aparte, no se oculta)', () => {
+    expect(calcularMontoNeto('1000', '1500', 'CLP')).toBe('-500')
   })
 })

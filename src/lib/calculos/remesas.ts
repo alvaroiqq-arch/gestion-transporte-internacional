@@ -29,3 +29,9 @@ export function tienenMonedaUnica(pagos: { moneda: Moneda }[]): boolean {
   if (pagos.length === 0) return true
   return pagos.every((p) => p.moneda === pagos[0].moneda)
 }
+
+// El medio de transferencia cobra una comisión que se descuenta del monto
+// recaudado en Chile — lo que Bolivia recibe es siempre <= lo cobrado.
+export function calcularMontoNeto(totalRecaudado: Decimal.Value, comision: Decimal.Value, moneda: Moneda): string {
+  return redondearMonto(new Decimal(totalRecaudado).minus(comision), moneda)
+}

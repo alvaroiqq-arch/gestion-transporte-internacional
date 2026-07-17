@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Decimal from 'decimal.js'
 import { db } from '@/lib/db'
+import { calcularMontoNeto } from '@/lib/calculos/remesas'
 import { crearClienteServidor } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,6 +43,7 @@ export default async function PaginaDetalleRemesa({ params }: { params: Promise<
   const total = remesa.pagos
     .reduce((acumulado, p) => acumulado.plus(p.monto), new Decimal(0))
     .toString()
+  const montoNeto = calcularMontoNeto(total, remesa.comision, remesa.moneda)
 
   const supabase = await crearClienteServidor()
   const { data: { user } } = await supabase.auth.getUser()
@@ -67,10 +69,20 @@ export default async function PaginaDetalleRemesa({ params }: { params: Promise<
 
       <Card>
         <CardHeader>
-          <CardTitle>Total enviado</CardTitle>
+          <CardTitle>Monto neto que recibe Bolivia</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-semibold tabular-nums">{total} {remesa.moneda}</p>
+          <p className="text-3xl font-semibold tabular-nums">{montoNeto} {remesa.moneda}</p>
+          <dl className="mt-3 flex flex-col gap-1 text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-muted-foreground">Total recaudado en Chile</dt>
+              <dd className="font-medium tabular-nums">{total} {remesa.moneda}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-muted-foreground">Comisión de transferencia</dt>
+              <dd className="font-medium tabular-nums">{remesa.comision} {remesa.moneda}</dd>
+            </div>
+          </dl>
         </CardContent>
       </Card>
 

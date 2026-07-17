@@ -1,17 +1,30 @@
 'use server'
 
 import { z } from 'zod'
+import Decimal from 'decimal.js'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { eq, and, inArray, isNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { pagos, remesas, audit_log } from '@/lib/db/schema'
-import { tienenMonedaUnica } from '@/lib/calculos/remesas'
+import { tienenMonedaUnica, sumarPorMoneda } from '@/lib/calculos/remesas'
+import { redondearMonto } from '@/lib/calculos/moneda'
 import { crearClienteServidor } from '@/lib/supabase/server'
 
 const esquemaRemesa = z.object({
   pago_ids: z.array(z.string().uuid()).min(1, 'Selecciona al menos un pago'),
   fecha_envio: z.string().min(1, 'La fecha de envío es obligatoria'),
+  comision: z
+    .string()
+    .trim()
+    .refine((v) => {
+      if (v === '') return true
+      try {
+        return !new Decimal(v).isNegative()
+      } catch {
+        return false
+      }
+    }, 'La comisión debe ser un monto válido, mayor o igual a 0'),
   notas: z.string().trim().optional(),
 })
 
@@ -44,6 +57,7 @@ export async function crearRemesa(
   const resultado = esquemaRemesa.safeParse({
     pago_ids: formData.getAll('pago_ids').map(String),
     fecha_envio: String(formData.get('fecha_envio') ?? ''),
+    comision: String(formData.get('comision') ?? ''),
     notas: String(formData.get('notas') ?? ''),
   })
 
@@ -88,12 +102,22 @@ export async function crearRemesa(
 
   const moneda = pagosSeleccionados[0].moneda
   const idsPagos = pagosSeleccionados.map((p) => p.id)
+  const totalRecaudado = sumarPorMoneda(pagosSeleccionados)[moneda]!
+  const comision = redondearMonto(d.comision || '0', moneda)
+
+  if (new Decimal(comision).greaterThan(totalRecaudado)) {
+    return {
+      error: 'La comisión no puede ser mayor al total recaudado.',
+      errores: { comision: ['No puede superar el total recaudado'] },
+    }
+  }
 
   const [remesa] = await db.transaction(async (tx) => {
     const [nuevaRemesa] = await tx
       .insert(remesas)
       .values({
         moneda,
+        comision,
         fecha_envio: d.fecha_envio,
         enviado_por_id: usuarioActual.id,
         notas: d.notas || null,

@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import Decimal from 'decimal.js'
 import { desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { remesas, usuarios } from '@/lib/db/schema'
+import { remesas, usuarios, pagos } from '@/lib/db/schema'
+import { calcularMontoNeto } from '@/lib/calculos/remesas'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -16,19 +18,34 @@ import { PageHeader } from '@/components/layout/page-header'
 import { EstadoRemesaBadge } from '@/components/estados/estado-badges'
 
 export default async function PaginaRemesas() {
-  const filas = await db
-    .select({
-      id: remesas.id,
-      numero: remesas.numero,
-      moneda: remesas.moneda,
-      estado: remesas.estado,
-      fecha_envio: remesas.fecha_envio,
-      fecha_recepcion: remesas.fecha_recepcion,
-      enviado_por_nombre: usuarios.nombre,
-    })
-    .from(remesas)
-    .leftJoin(usuarios, eq(remesas.enviado_por_id, usuarios.id))
-    .orderBy(desc(remesas.numero))
+  const [cabeceras, montosPagos] = await Promise.all([
+    db
+      .select({
+        id: remesas.id,
+        numero: remesas.numero,
+        moneda: remesas.moneda,
+        comision: remesas.comision,
+        estado: remesas.estado,
+        fecha_envio: remesas.fecha_envio,
+        fecha_recepcion: remesas.fecha_recepcion,
+        enviado_por_nombre: usuarios.nombre,
+      })
+      .from(remesas)
+      .leftJoin(usuarios, eq(remesas.enviado_por_id, usuarios.id))
+      .orderBy(desc(remesas.numero)),
+    db.select({ remesa_id: pagos.remesa_id, monto: pagos.monto }).from(pagos),
+  ])
+
+  const totalPorRemesa = new Map<string, Decimal>()
+  for (const p of montosPagos) {
+    if (!p.remesa_id) continue
+    totalPorRemesa.set(p.remesa_id, (totalPorRemesa.get(p.remesa_id) ?? new Decimal(0)).plus(p.monto))
+  }
+
+  const filas = cabeceras.map((r) => ({
+    ...r,
+    montoNeto: calcularMontoNeto(totalPorRemesa.get(r.id) ?? 0, r.comision, r.moneda),
+  }))
 
   return (
     <div>
@@ -43,7 +60,7 @@ export default async function PaginaRemesas() {
           <TableHeader>
             <TableRow className="bg-muted/40">
               <TableHead>N°</TableHead>
-              <TableHead>Moneda</TableHead>
+              <TableHead>Monto neto</TableHead>
               <TableHead>Enviado por</TableHead>
               <TableHead>Fecha de envío</TableHead>
               <TableHead>Fecha de recepción</TableHead>
@@ -55,7 +72,7 @@ export default async function PaginaRemesas() {
             {filas.map((r) => (
               <TableRow key={r.id}>
                 <TableCell className="font-medium tabular-nums">{r.numero}</TableCell>
-                <TableCell>{r.moneda}</TableCell>
+                <TableCell className="tabular-nums">{r.montoNeto} {r.moneda}</TableCell>
                 <TableCell>{r.enviado_por_nombre ?? '—'}</TableCell>
                 <TableCell className="tabular-nums">{r.fecha_envio}</TableCell>
                 <TableCell className="tabular-nums">
