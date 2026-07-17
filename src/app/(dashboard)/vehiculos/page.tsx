@@ -55,8 +55,11 @@ export default async function PaginaVehiculos({
         </Button>
       </PageHeader>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <FiltroEmpresa empresas={empresas} />
+        <p className="text-sm text-muted-foreground">
+          {filas.length} {filas.length === 1 ? 'vehículo' : 'vehículos'}
+        </p>
       </div>
 
       <Card className="overflow-hidden py-0">
