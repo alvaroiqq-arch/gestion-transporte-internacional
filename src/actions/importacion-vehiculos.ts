@@ -8,6 +8,7 @@ import { vehiculos, empresas_cliente } from '@/lib/db/schema'
 import { crearClienteServidor } from '@/lib/supabase/server'
 import { extraerTextoPdf } from '@/lib/pdf/extraer-texto'
 import { parsearCertificadoRvm } from '@/lib/pdf/certificado-rvm'
+import { extraerVehiculoConIA } from '@/lib/pdf/ocr-certificado-rvm'
 import { normalizarPatente } from '@/lib/validaciones/patente'
 import { normalizarRut } from '@/lib/validaciones/rut'
 
@@ -60,7 +61,12 @@ export async function analizarPdfsVehiculos(
     try {
       const datos = new Uint8Array(await archivo.arrayBuffer())
       const texto = await extraerTextoPdf(datos)
-      const v = parsearCertificadoRvm(texto)
+      let v = parsearCertificadoRvm(texto)
+      // Si no se pudo interpretar por texto (ej. certificado escaneado o
+      // fotografiado, sin texto embebido), probar leyendo el PDF con IA
+      if (v.error) {
+        v = await extraerVehiculoConIA(datos).catch(() => v)
+      }
       filas.push({
         archivo: archivo.name,
         patente: v.patente,

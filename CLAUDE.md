@@ -192,6 +192,10 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 # Sentry
 NEXT_PUBLIC_SENTRY_DSN=
+
+# Anthropic — respaldo con IA para certificados R.V.M. escaneados/fotografiados
+# (src/lib/pdf/ocr-certificado-rvm.ts), usado cuando el PDF no tiene texto embebido
+ANTHROPIC_API_KEY=
 ```
 
 ## Cómo trabajar con Claude Code
